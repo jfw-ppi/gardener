@@ -2,7 +2,7 @@ image: "thlmylab/swakkd:stable"
 
 variables:
   DOMAIN: "edu.k8s.th-luebeck.dev"
-  DEPLOY: "no"
+  DEPLOY: "yes"
 
 stages:
 - prepare
