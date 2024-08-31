@@ -5,7 +5,6 @@ stages:
   - build
   - deploy
 
-# Credentials for accessing the GitLab Docker registry
 credentials:
   stage: prepare
   rules:
@@ -17,7 +16,6 @@ credentials:
                 --docker-username=image-registry \ 
                 --docker-password=$CI_REGISTRY_TOKEN"
 
-# Build and push the backend image
 backend-img:
   stage: build
   image: docker:dind
@@ -29,7 +27,6 @@ backend-img:
     - docker build -t $CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:latest backend/
     - docker push $CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:latest
 
-# Build and push the frontend image
 frontend-img:
   stage: build
   image: docker:dind
@@ -41,7 +38,6 @@ frontend-img:
     - docker build -t $CI_REGISTRY_IMAGE/frontend-$CI_COMMIT_REF_NAME:latest frontend/
     - docker push $CI_REGISTRY_IMAGE/frontend-$CI_COMMIT_REF_NAME:latest
 
-# Deploy the backend and database
 backend-db-deploy:
   stage: deploy
   rules:
@@ -52,7 +48,6 @@ backend-db-deploy:
     - mo deploy/db-dep.yaml | kubectl apply -f -
     - mo deploy/backend-svc.yaml | kubectl apply -f -
 
-# Deploy the frontend
 frontend-deploy:
   stage: deploy
   rules:

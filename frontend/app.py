@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file if it exists
 load_dotenv()
 
+
 # Set up base URL and port for backend API
 base_url = os.getenv("BACKEND_URL", "http://localhost")
 port = os.getenv("BACKEND_PORT", "8000")
