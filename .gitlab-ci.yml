@@ -4,7 +4,6 @@ stages:
   - prepare
   - build
   - deploy
-  - destroy
 
 # Credentials for accessing the GitLab Docker registry
 credentials:
