@@ -1,21 +1,10 @@
 image: "thlmylab/swakkd:stable"
 
-variables:
-  DOMAIN: "edu.k8s.th-luebeck.dev"
-  DEPLOY: "yes"
-  DB_HOST: "$DB_HOST"
-  DB_PORT: "5432"
-  DB_USER: "$DB_USER"
-  DB_PASSWORD: "$DB_PASSWORD"
-  DB_DATABASE: "$DB_DATABASE"
-  BACKEND_URL: "http://backend-service"
-  BACKEND_PORT: "8000"
-
 stages:
-- prepare
-- build
-- deploy
-- destroy
+  - prepare
+  - build
+  - deploy
+  - destroy
 
 # Credentials for accessing the GitLab Docker registry
 credentials:

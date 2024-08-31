@@ -14,13 +14,15 @@ spec:
       labels:
         app: frontend
     spec:
+      imagePullSecrets:
+      - name: gitlab-registry-credentials
       containers:
       - name: frontend
-        image: {{ CI_REGISTRY_IMAGE }}/frontend-{{ CI_COMMIT_REF_NAME }}:latest
+        image: "{{ CI_REGISTRY_IMAGE }}/frontend-{{ CI_COMMIT_REF_NAME }}:latest"
         ports:
         - containerPort: 8501
         env:
         - name: BACKEND_URL
-          value: "$BACKEND_URL"  # Points to the internal backend service name
+          value: {{ BACKEND_URL }}
         - name: BACKEND_PORT
-          value: "$BACKEND_PORT"
+          value: {{ BACKEND_PORT }}
