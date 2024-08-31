@@ -1,5 +1,8 @@
 image: "thlmylab/swakkd:stable"
 
+variables:
+  DEPLOY: "yes"
+
 stages:
   - prepare
   - build
