@@ -1,8 +1,8 @@
 import os
-import pandas as pd
+
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
-from sklearn.preprocessing import MultiLabelBinarizer
 
 
 # Function to save and display the missing data visualization
@@ -22,36 +22,8 @@ def visualize_missing_values(df, title, filename):
     plt.close()
 
 
-# Function to encode ordinal columns with binary encoding for multiple values
-def binary_encode_ordinal_columns(df, ordinal_columns):
-    mlb = MultiLabelBinarizer()
-
-    for col in ordinal_columns:
-        if col in df.columns:
-            df[col] = df[col].replace('', pd.NA)
-            df = df.dropna(subset=[col])  # Remove rows with unset values
-
-            # Split the string by commas and apply MultiLabelBinarizer
-            df.loc[:, col] = df[col].apply(lambda x: x.split(', '))
-            encoded_cols = pd.DataFrame(mlb.fit_transform(df[col]), columns=mlb.classes_, index=df.index)
-
-            # Join the binary encoded columns with the original DataFrame
-            df = df.drop(columns=[col]).join(encoded_cols)
-
-    return df
-
-
-# Function to replace missing values in numerical columns with the mean
-def fill_missing_numerical_with_mean(df, columns):
-    for col in columns:
-        df[col] = df[col].replace('', pd.NA)  # Unify missing values
-        if df[col].dtype in ['float64', 'int64']:
-            df[col] = df[col].fillna(df[col].mean())
-    return df
-
-
 # Function to perform all transformations and save reports
-def transform_ecocrop_data(binary_encode=False):
+def transform_ecocrop_data():
     # Define paths
     resources_path = "resources"
     data_report_path = os.path.join(resources_path, "data-report")
@@ -75,10 +47,6 @@ def transform_ecocrop_data(binary_encode=False):
 
         # List of ordinal fields with multiple possible values
         ordinal_fields_with_multiple_values = ["TEXT", "DRA"]
-
-        # Apply binary encoding if specified
-        if binary_encode:
-            ecocrop_df = binary_encode_ordinal_columns(ecocrop_df, ordinal_fields_with_multiple_values)
 
         # List of numerical fields to process
         numerical_fields = ["TOPMN", "TOPMX", "TMIN", "TMAX", "ROPMN", "ROPMX", "RMIN", "RMAX", "GMIN", "GMAX", "KTMP"]
@@ -117,13 +85,8 @@ def transform_ecocrop_data(binary_encode=False):
         cleaned_ecocrop_df = ecocrop_df.dropna(subset=fields_to_check)
         removed_rows_count = before_removal_row_count - cleaned_ecocrop_df.shape[0]
 
-        # Determine the output file name based on whether binary encoding was applied
-        if binary_encode:
-            cleaned_file_name = "Cleaned_EcoCrop_DB_Final_BinaryEncoded.xlsx"
-            suffix = "_binary_encoded"
-        else:
-            cleaned_file_name = "Cleaned_EcoCrop_DB_Final.xlsx"
-            suffix = ""
+        cleaned_file_name = "Cleaned_EcoCrop_DB_Final.xlsx"
+        suffix = ""
 
         cleaned_file_path = os.path.join(resources_path, cleaned_file_name)
         cleaned_ecocrop_df.to_excel(cleaned_file_path, index=False)
@@ -138,12 +101,11 @@ def transform_ecocrop_data(binary_encode=False):
         summary_file.write(f"4. Set 'GMAX' to 0 for {gmax_na_count} rows where it was missing or empty.\n")
         summary_file.write(
             f"5. Removed {removed_rows_count} rows with NA values in the following fields: {', '.join(fields_to_check)}.\n")
-        if binary_encode:
-            summary_file.write("6. Binary encoded ordinal columns with multiple values.\n")
+
         summary_file.write(
             f"Resulting dataset contains {cleaned_ecocrop_df.shape[0]} rows and {cleaned_ecocrop_df.shape[1]} columns.\n")
 
-        # Perform final visualizations with modified filenames if binary encoding is applied
+        # Perform final visualizations
         visualize_missing_values(cleaned_ecocrop_df,
                                  "Missing Values (NA or Empty String) Across Columns - After Transformation",
                                  os.path.join(data_report_path, f"missing_after{suffix}.png"))
@@ -158,5 +120,4 @@ def transform_ecocrop_data(binary_encode=False):
         plt.close()
 
 
-# Call the transformation method with binary encoding as needed
-# transform_ecocrop_data(binary_encode=False)
+transform_ecocrop_data()

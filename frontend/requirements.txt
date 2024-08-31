@@ -1,4 +1,6 @@
 streamlit>=1.35.0
 requests>=2.32.3
-
+matplotlib
+langchain
+langchain_huggingface
 python-dotenv

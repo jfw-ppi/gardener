@@ -1,9 +1,9 @@
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.ext.asyncio import async_sessionmaker
 from typing import AsyncGenerator
+
 import dotenv
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 # Load environment variables from .env file
 dotenv.load_dotenv()

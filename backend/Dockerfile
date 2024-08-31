@@ -1,21 +1,25 @@
-FROM python:3.12
+# Use an official Python runtime as a parent image
+FROM python:3.12-slim
 
-# Set the working directory inside the container
-WORKDIR /backend
+# Set the working directory in the container
+WORKDIR /app
 
-# Copy the requirements file and install dependencies
-COPY main.py .
+# Install any necessary dependencies
 COPY requirements.txt ./
-COPY resources/ resources/
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the app directory into the container
-COPY app/ ./app/
+# Copy the rest of the application's code to the container
+COPY . .
 
-# Copy the main.py file into the container
-COPY main.py ./
+# Set environment variables for the app
+ENV PYTHONUNBUFFERED=1
 
+# Expose the port the app runs on
 EXPOSE 8000
+
+# Run the application
+CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000"]
+
 
 # Command to run the application
 CMD ["python", "main.py"]

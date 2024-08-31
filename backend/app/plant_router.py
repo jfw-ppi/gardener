@@ -1,12 +1,11 @@
 import math
-from typing import List
-import requests
-from fastapi import APIRouter, Query, HTTPException, Depends
+
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import get_async_session
-from .models import Plant, PlantResponse, PlantSuitabilityResponse
+from .models import Plant, PlantModel, PlantSuitabilityResponse
 from .suitability import get_weather_and_suitability
 
 
@@ -31,13 +30,13 @@ def get_plant_router() -> APIRouter:
     Create and return an APIRouter for plant-related endpoints.
 
     This router includes endpoints for retrieving all plants, searching by scientific name,
-    searching by common name, general searching, and finding similar plants based on embeddings.
+    searching by common name and the calculation of suitability score
 
     :return: An APIRouter with the plant-related routes.
     """
     router = APIRouter()
 
-    @router.get("/")
+    @router.get("/", response_model=list[PlantModel])
     async def get_all_plants(session: AsyncSession = Depends(get_async_session)):
         """
         Retrieve all plants from the database.
@@ -53,7 +52,7 @@ def get_plant_router() -> APIRouter:
         plants = [_replace_nan_with_none(plant) for plant in plants]
         return plants
 
-    @router.get("/scientific_name/{scientific_name}", response_model=list[PlantResponse])
+    @router.get("/scientific_name/{scientific_name}", response_model=list[PlantModel])
     async def get_plant_by_scientific_name(scientific_name: str, db: AsyncSession = Depends(get_async_session)):
         """
         Retrieve plants by their scientific name.
@@ -75,7 +74,7 @@ def get_plant_router() -> APIRouter:
         plants = [_replace_nan_with_none(plant) for plant in plants]
         return plants
 
-    @router.get("/common_name/{common_name}", response_model=list[PlantResponse])
+    @router.get("/common_name/{common_name}", response_model=list[PlantModel])
     async def get_plant_by_common_name(common_name: str, db: AsyncSession = Depends(get_async_session)):
         """
         Retrieve plants by their common name.
@@ -97,7 +96,7 @@ def get_plant_router() -> APIRouter:
         plants = [_replace_nan_with_none(plant) for plant in plants]
         return plants
 
-    @router.get("/search/{query}", response_model=list[PlantResponse])
+    @router.get("/search/{query}", response_model=list[PlantModel])
     async def search_plants(query: str, db: AsyncSession = Depends(get_async_session)):
         """
         Search plants by a general query.
@@ -121,7 +120,7 @@ def get_plant_router() -> APIRouter:
         plants = [_replace_nan_with_none(plant) for plant in plants]
         return plants
 
-    @router.get("/suitability/single/{scientific_name}", response_model=PlantSuitabilityResponse)
+    @router.get("/suitability/{scientific_name}", response_model=PlantSuitabilityResponse)
     async def calculate_suitability_for_plant(
             scientific_name: str,
             location: str,
@@ -141,5 +140,22 @@ def get_plant_router() -> APIRouter:
         )
 
         return plant_response
+
+    @router.put("/", response_model=PlantModel)
+    async def update_plant(updated_plant: PlantModel,
+                           session: AsyncSession = Depends(get_async_session)):
+        query = select(Plant).where(Plant.ScientificName.ilike(updated_plant.ScientificName))
+        result = await session.execute(query)
+        plant = result.scalars().first()
+
+        if not plant:
+            raise HTTPException(status_code=404, detail="Plant not found.")
+
+        for key, value in updated_plant.dict().items():
+            setattr(plant, key, value)
+
+        await session.commit()  # Changes are automatically detected and persisted
+        await session.refresh(plant)
+        return plant
 
     return router

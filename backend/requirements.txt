@@ -1,21 +1,19 @@
-uvicorn[standard]
+pandas
 matplotlib
 seaborn
-openpyxl
-mpld3
 
-openai
-requests>=2.32.3
-pandas
-numpy
-langchain>=0.2.3
+
+fastapi
 SQLAlchemy[asyncio]
 pydantic
 asyncpg
+uvicorn[standard]
+requests>=2.32.3
 
-scikit-learn
-langchain
-langchain_community
-tiktoken
-chromadb
-text_generation
+python-dotenv
+
+
+
+
+
+

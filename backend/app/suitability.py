@@ -7,7 +7,7 @@ from .models import Plant
 
 import logging
 
-# Configure logger
+# Configure logger to capture detailed debug information
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture all types of logs
 
@@ -15,40 +15,66 @@ logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture all types of logs
 # Helper functions for calculating suitability scores
 
 def calculate_daily_suitability(temperature, precipitation, plant):
-    # Temperature suitability score
+    """
+    Calculate daily suitability based on temperature and precipitation relative to the plant's tolerance ranges.
+    This function uses a simple linear scoring mechanism, which is more computationally efficient than the EcoCrop method.
+
+    - Temperature scoring:
+      * 100 points if the temperature is within the optimal range.
+      * Scores reduce linearly outside the optimal range, reflecting deviations.
+    - Precipitation scoring:
+      * 100 points if the precipitation is within the plant's optimal range (RMIN to RMAX).
+      * Scores decrease linearly outside the optimal range, reflecting how much the precipitation deviates from the ideal conditions.
+
+    This simplified method was chosen to reduce computational complexity while still providing meaningful suitability scores.
+    """
+
+    # Temperature suitability score calculation
     if plant.TMIN <= temperature <= plant.TMAX:
         temp_score = 100
     elif temperature < plant.TMIN:
-        temp_score = max(0, 100 - (plant.TMIN - temperature) * 10)  # Reduce score as it deviates
+        temp_score = max(0, 100 - (plant.TMIN - temperature) * 10)  # Linearly reduce score below TMIN
     else:
-        temp_score = max(0, 100 - (temperature - plant.TMAX) * 10)
+        temp_score = max(0, 100 - (temperature - plant.TMAX) * 10)  # Linearly reduce score above TMAX
 
-    # Precipitation suitability score
+    # Precipitation suitability score calculation
     if plant.RMIN <= precipitation <= plant.RMAX:
         precip_score = 100
     elif precipitation < plant.RMIN:
-        precip_score = max(0, 100 - (plant.RMIN - precipitation) * 10)
+        precip_score = max(0, 100 - (plant.RMIN - precipitation) * 10)  # Linearly reduce score below RMIN
     else:
-        precip_score = max(0, 100 - (precipitation - plant.RMAX) * 10)
+        precip_score = max(0, 100 - (precipitation - plant.RMAX) * 10)  # Linearly reduce score above RMAX
 
-    # Average the scores
+    # Return the average of temperature and precipitation scores
     return (temp_score + precip_score) / 2
 
 
 def calculate_suitability_score(weather_data, plant):
+    """
+    Calculate the overall suitability score for a 30-day period based on daily weather data.
+    This approach is simpler and less computationally intensive compared to the EcoCrop model, which considers GTIME intervals.
+
+    The EcoCrop model's detailed process was streamlined to a daily average method to provide faster results for practical use cases.
+    """
+
     suitability_scores = []
 
+    # Calculate suitability for each day's weather data
     for temperature, precipitation in zip(weather_data['temperature_2m_mean'], weather_data['precipitation_sum']):
         daily_score = calculate_daily_suitability(temperature, precipitation, plant)
         suitability_scores.append(daily_score)
 
-    # Average score over the 30-day period
+    # Return the average suitability score over the 30-day period
     final_suitability_score = sum(suitability_scores) / len(suitability_scores)
 
     return final_suitability_score
 
 
-async def get_plant_data_by_scientific_name(scientific_name, session: AsyncSession):
+async def get_plant_data_by_scientific_name(scientific_name: str, session: AsyncSession) -> Plant:
+    """
+    Retrieve plant data from the database using the scientific name.
+    Raises a 404 HTTPException if the plant is not found in the database.
+    """
     query = select(Plant).where(Plant.ScientificName.ilike(scientific_name))
     result = await session.execute(query)
     plant = result.scalars().first()
@@ -58,11 +84,22 @@ async def get_plant_data_by_scientific_name(scientific_name, session: AsyncSessi
 
 
 async def get_weather_and_suitability(location, scientific_name, session: AsyncSession):
-    # If location is a tuple of latitude and longitude, use them directly
+    """
+    Fetch weather data for a given location and calculate the suitability of the location for growing the specified plant.
+    The process involves:
+    1. Geocoding the location to obtain latitude and longitude.
+    2. Retrieving plant data based on the scientific name.
+    3. Fetching historical weather data for the last 30 days.
+    4. Calculating the plant suitability score using simplified daily averages instead of the more complex EcoCrop model.
+
+    This method offers a balance between accuracy and computational efficiency, making it suitable for real-time applications.
+    """
+
+    # Geocode the location if it is provided as a string (place name)
     if isinstance(location, tuple):
         latitude, longitude = location
     else:
-        # Otherwise, geocode the location
+        # Geocode the location to get latitude and longitude
         geocode_url = f"https://geocode.xyz/{location}?json=1"
         geocode_response = requests.get(geocode_url)
         geocode_data = geocode_response.json()
@@ -72,7 +109,7 @@ async def get_weather_and_suitability(location, scientific_name, session: AsyncS
     # Step 2: Fetch plant data from the database
     plant = await get_plant_data_by_scientific_name(scientific_name, session)
 
-    # Step 3: Fetch historical weather data
+    # Step 3: Fetch historical weather data for the last 30 days
     end_date = datetime.date.today() - datetime.timedelta(days=1)
     start_date = end_date - datetime.timedelta(days=30)
 
@@ -97,6 +134,7 @@ async def get_weather_and_suitability(location, scientific_name, session: AsyncS
         logger.error(f"Temperature or precipitation data missing or invalid: {daily_weather}")
         raise HTTPException(status_code=500, detail="Temperature or precipitation data missing or invalid.")
 
+    # Calculate the final suitability score using the simplified approach
     try:
         final_suitability_score = calculate_suitability_score(
             {"temperature_2m_mean": temperature_2m_mean, "precipitation_sum": precipitation_sum},
@@ -119,7 +157,7 @@ async def get_weather_and_suitability(location, scientific_name, session: AsyncS
         "suitability_details": {
             "suitability_score": final_suitability_score,
             "warnings": [],
-            "interval_used": 30
+            "interval_used": 30  # Indicates the 30-day interval used for the calculation
         },
         "weather_data": {
             "temperature_2m_mean": temperature_2m_mean,

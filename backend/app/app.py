@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 import pandas as pd
 from fastapi import FastAPI
 
-from .data_transformer import transform_ecocrop_data
 from .database import async_session_maker, engine
 from .models import Plant, Base
 from .plant_router import get_plant_router
@@ -22,7 +21,7 @@ async def lifespan(app: FastAPI):
         log_writer.info("Database schema created successfully.")
 
     # log_writer.info("Creating cleaned dataset")
-    # transform_ecocrop_data(binary_encode=False)
+    # transform_ecocrop_data()
     # log_writer.info("Finished creating cleaned dataset")
     #
     # log_writer.info("Loading Plants into DB")

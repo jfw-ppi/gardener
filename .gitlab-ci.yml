@@ -1,8 +1,8 @@
 image: "thlmylab/swakkd:stable"
 
 variables:
-  DOMAIN: "edu.k8s.th-luebeck.dev"
-  DEPLOY: "yes"
+  DOMAIN: "edu.k8s.th-luebeck.dev"  # The domain where the application will be accessible
+  DEPLOY: "yes"  # Control whether the deployment should happen
 
 stages:
 - prepare
@@ -10,19 +10,21 @@ stages:
 - deploy
 - destroy
 
+# Credentials for accessing the GitLab Docker registry
 credentials:
   stage: prepare
   rules:
     - if: '$DEPLOY == "yes"'
   script:
-  - kubectl delete secret gitlab-registry-$CI_PROJECT_ID || true
-  - >
-    kubectl create secret docker-registry gitlab-registry-$CI_PROJECT_ID
-    --docker-server=$CI_REGISTRY
-    --docker-username=image-registry
-    --docker-password=$CI_REGISTRY_TOKEN
+    - kubectl delete secret gitlab-registry-$CI_PROJECT_ID || true
+    - >
+      kubectl create secret docker-registry gitlab-registry-$CI_PROJECT_ID
+      --docker-server=$CI_REGISTRY
+      --docker-username=image-registry
+      --docker-password=$CI_REGISTRY_TOKEN
 
-app-img:
+# Build and push the backend image
+backend-img:
   stage: build
   image: docker:dind
   services: ["docker:dind"]
@@ -30,22 +32,38 @@ app-img:
     - if: '$DEPLOY == "yes"'
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $CI_REGISTRY_IMAGE/app-$CI_COMMIT_REF_NAME:latest app/
-    - docker push $CI_REGISTRY_IMAGE/app-$CI_COMMIT_REF_NAME:latest
+    - docker build -t $CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:latest backend/
+    - docker push $CI_REGISTRY_IMAGE/backend-$CI_COMMIT_REF_NAME:latest
 
-app:
+# Build and push the frontend image
+frontend-img:
+  stage: build
+  image: docker:dind
+  services: ["docker:dind"]
+  rules:
+    - if: '$DEPLOY == "yes"'
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE/frontend-$CI_COMMIT_REF_NAME:latest frontend/
+    - docker push $CI_REGISTRY_IMAGE/frontend-$CI_COMMIT_REF_NAME:latest
+
+# Deploy the backend and database
+backend-db-deploy:
   stage: deploy
   rules:
     - if: '$DEPLOY == "yes"'
   script:
-  - mo deploy/app-dep.yaml | kubectl delete -f - || true
-  - mo deploy/app-dep.yaml | kubectl apply -f -
-  - mo deploy/app-svc.yaml | kubectl apply -f -
+    - mo deploy/backend-dep.yaml | kubectl delete -f - || true
+    - mo deploy/backend-dep.yaml | kubectl apply -f -
+    - mo deploy/db-dep.yaml | kubectl apply -f -
 
-ingress:
+# Deploy the frontend
+frontend-deploy:
   stage: deploy
   rules:
     - if: '$DEPLOY == "yes"'
-  when: manual
   script:
-  - HOST=uber-$CI_PROJECT_ID.$DOMAIN mo deploy/project-ing.yaml | kubectl apply -f -
+    - mo deploy/frontend-dep.yaml | kubectl delete -f - || true
+    - mo deploy/frontend-dep.yaml | kubectl apply -f -
+    - mo deploy/frontend-svc.yaml | kubectl apply -f -
+    - mo deploy/frontend-ing.yaml | kubectl apply -f -
