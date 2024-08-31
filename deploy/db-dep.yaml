@@ -1,7 +1,19 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgresql
+  name: postgresql-deployment
   labels:
     app: postgresql
 spec:
@@ -16,7 +28,7 @@ spec:
     spec:
       containers:
       - name: postgresql
-        image: postgres:14
+        image: postgres:16-alpine
         ports:
         - containerPort: 5432
         env:
@@ -33,28 +45,3 @@ spec:
       - name: postgresql-storage
         persistentVolumeClaim:
           claimName: postgresql-pvc
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgresql-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgresql-service
-spec:
-  selector:
-    app: postgresql
-  ports:
-    - protocol: TCP
-      port: 5432
-      targetPort: 5432

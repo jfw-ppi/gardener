@@ -1,8 +1,15 @@
 image: "thlmylab/swakkd:stable"
 
 variables:
-  DOMAIN: "edu.k8s.th-luebeck.dev"  # The domain where the application will be accessible
-  DEPLOY: "yes"  # Control whether the deployment should happen
+  DOMAIN: "edu.k8s.th-luebeck.dev"
+  DEPLOY: "yes"
+  DB_HOST: "postgresql-service"
+  DB_PORT: "5432"
+  DB_USER: "$DB_USER"
+  DB_PASSWORD: "$DB_PASSWORD"
+  DB_DATABASE: "$DB_DATABASE"
+  BACKEND_URL: "http://backend-service"
+  BACKEND_PORT: "8000"
 
 stages:
 - prepare
@@ -16,12 +23,11 @@ credentials:
   rules:
     - if: '$DEPLOY == "yes"'
   script:
-    - kubectl delete secret gitlab-registry-$CI_PROJECT_ID || true
-    - >
-      kubectl create secret docker-registry gitlab-registry-$CI_PROJECT_ID
-      --docker-server=$CI_REGISTRY
-      --docker-username=image-registry
-      --docker-password=$CI_REGISTRY_TOKEN
+    - kubectl delete secret gitlab-registry-credentials || true
+    - "kubectl create secret docker-registry gitlab-registry-credentials \
+                --docker-server=$CI_REGISTRY \
+                --docker-username=image-registry \ 
+                --docker-password=$CI_REGISTRY_TOKEN"
 
 # Build and push the backend image
 backend-img:
@@ -56,6 +62,7 @@ backend-db-deploy:
     - mo deploy/backend-dep.yaml | kubectl delete -f - || true
     - mo deploy/backend-dep.yaml | kubectl apply -f -
     - mo deploy/db-dep.yaml | kubectl apply -f -
+    - mo deploy/backend-svc.yaml | kubectl apply -f -
 
 # Deploy the frontend
 frontend-deploy:
