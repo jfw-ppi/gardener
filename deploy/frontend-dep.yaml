@@ -25,4 +25,4 @@ spec:
         - name: BACKEND_URL
           value: {{ BACKEND_URL }}
         - name: BACKEND_PORT
-          value: 8000
+          value: "8000"
