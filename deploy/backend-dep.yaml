@@ -20,12 +20,12 @@ spec:
       - name: backend
         image: "{{ CI_REGISTRY_IMAGE }}/backend-{{ CI_COMMIT_REF_NAME }}:latest"
         ports:
-        - containerPort: {{ BACKEND_PORT }}
+        - containerPort: 8000
         env:
         - name: DB_HOST
           value: {{ DB_HOST }}
         - name: DB_PORT
-          value: "!!int $DB_PORT"
+          value: 5432
         - name: DB_USER
           value: {{ DB_USER }}
         - name: DB_PASSWORD
@@ -35,7 +35,7 @@ spec:
         - name: BACKEND_URL
           value: {{ BACKEND_URL }}
         - name: BACKEND_PORT
-          value: {{ BACKEND_PORT }}
+          value: 8000
         volumeMounts:
         - mountPath: /var/lib/postgresql/data
           name: postgresql-storage
