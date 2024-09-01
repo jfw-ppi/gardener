@@ -25,7 +25,7 @@ spec:
         - name: DB_HOST
           value: {{ DB_HOST }}
         - name: DB_PORT
-          value: "!!int {{ DB_PORT }}"
+          value: "!!int $DB_PORT"
         - name: DB_USER
           value: {{ DB_USER }}
         - name: DB_PASSWORD
