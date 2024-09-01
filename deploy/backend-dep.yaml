@@ -23,7 +23,7 @@ spec:
         - containerPort: {{ BACKEND_PORT }}
         env:
         - name: DB_HOST
-          value:  $DB_HOST
+          value: {{ DB_HOST }}
         - name: DB_PORT
           value: !!int {{ DB_PORT }}
         - name: DB_USER
