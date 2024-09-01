@@ -1,3 +1,4 @@
+# backend-dep.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,7 +24,7 @@ spec:
         - containerPort: 8000
         env:
         - name: DB_HOST
-          value: {{ DB_HOST }}
+          value: postgresql-service
         - name: DB_PORT
           value: "5432"
         - name: DB_USER

@@ -46,9 +46,11 @@ backend-db-deploy:
   rules:
     - if: '$DEPLOY == "yes"'
   script:
+    - mo deploy/db-dep.yaml | kubectl delete -f - || true
+    - mo deploy/db-dep.yaml | kubectl apply -f -
+    - mo deploy/postgresql-svc.yaml | kubectl apply -f -
     - mo deploy/backend-dep.yaml | kubectl delete -f - || true
     - mo deploy/backend-dep.yaml | kubectl apply -f -
-    - mo deploy/db-dep.yaml | kubectl apply -f -
     - mo deploy/backend-svc.yaml | kubectl apply -f -
 
 frontend-deploy:
