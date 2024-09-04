@@ -12,8 +12,8 @@ load_dotenv()
 
 
 # Set up base URL and port for backend API
-base_url = os.getenv("BACKEND_URL", "http://backend-service")
-port = os.getenv("BACKEND_PORT", "8000")
+base_url = os.getenv("BACKEND_URL")
+port = "8000"
 
 # Full API URL
 api_url = f"{base_url}:{port}"

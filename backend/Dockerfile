@@ -19,7 +19,3 @@ EXPOSE 8000
 
 # Run the application
 CMD ["python", "main.py"]
-
-
-# Command to run the application
-CMD ["python", "main.py"]

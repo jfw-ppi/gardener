@@ -45,14 +45,10 @@ def transform_ecocrop_data():
                                  "Missing Values (NA or Empty String) Across Columns - Before Transformation",
                                  os.path.join(data_report_path, "missing_before.png"))
 
-        # List of ordinal fields with multiple possible values
-        ordinal_fields_with_multiple_values = ["TEXT", "DRA"]
-
         # List of numerical fields to process
         numerical_fields = ["TOPMN", "TOPMX", "TMIN", "TMAX", "ROPMN", "ROPMX", "RMIN", "RMAX", "GMIN", "GMAX", "KTMP"]
 
         # Step 1: Remove entries where TOPMN > 40 degrees
-        initial_row_count = ecocrop_df.shape[0]
         invalid_topmn_mask = ecocrop_df['TOPMN'] > 40
         invalid_topmn_count = invalid_topmn_mask.sum()
         ecocrop_df = ecocrop_df[~invalid_topmn_mask]
@@ -76,7 +72,6 @@ def transform_ecocrop_data():
         ecocrop_df.loc[gmax_na_or_empty_mask, 'GMAX'] = 0
 
         gmin_na_or_empty_mask = ecocrop_df['GMIN'].isna() | (ecocrop_df['GMIN'] == '')
-        gmin_na_count = gmin_na_or_empty_mask.sum()
         ecocrop_df.loc[gmin_na_or_empty_mask, 'GMIN'] = 0
 
         # Step 5: Remove rows with any other NA values in the fields of interest
