@@ -58,7 +58,7 @@ deploy-frontend:
 deploy-persistent-cache:
     stage: deploy
     script:
-        - kubectl apply -f deploy/persistent-postgres
+        - mo deploy/persistent-postgres/postgres.yaml | kubectl apply -f -
 
 terminate:
     stage: terminate
