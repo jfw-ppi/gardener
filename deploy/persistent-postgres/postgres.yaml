@@ -22,7 +22,8 @@ spec:
         - containerPort: 5432
         env:
           - name: POSTGRES_DB
-            value: {{ DB_DATABASE }}
+            value: postgres
+            #{{ DB_DATABASE }}
           - name: POSTGRES_USER
             value: {{ DB_USER }}
           - name: POSTGRES_PASSWORD
