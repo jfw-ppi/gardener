@@ -2,7 +2,7 @@ pandas
 matplotlib
 seaborn
 
-
+openpyxl
 fastapi
 SQLAlchemy[asyncio]
 pydantic

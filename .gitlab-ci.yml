@@ -55,7 +55,7 @@ deploy-frontend:
         - mo deploy/frontend/frontend-deployment.yaml | kubectl delete -f - || true
         - mo deploy/frontend/frontend-deployment.yaml | kubectl apply -f -
 
-deploy-persistent-cache:
+deploy-persistent-postgres:
     stage: deploy
     script:
         - mo deploy/persistent-postgres/postgres.yaml | kubectl apply -f -
