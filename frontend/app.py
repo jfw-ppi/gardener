@@ -104,7 +104,7 @@ if st.button("🌟 Calculate Suitability 🌟", disabled=not location):
                 longitude = geocode_data['longt']
 
                 # Fetch plant suitability data from backend API
-                suitability_url = f"{api_url}/plants/suitability/single/{plant_name}?location={location}"
+                suitability_url = f"{api_url}/plants/suitability/{plant_name}?location={location}"
                 suitability_response = requests.get(suitability_url)
 
                 if suitability_response.status_code == 200:
