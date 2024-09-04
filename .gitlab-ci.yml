@@ -1,4 +1,3 @@
-# .gitlab-ci.yml
 image: "thlmylab/swakkd:stable"
 
 stages:
@@ -52,9 +51,9 @@ deploy-frontend:
     stage: deploy
     script:
         - mo deploy/frontend/frontend-ingress.yaml | kubectl apply -f -
-        - mo deploy/backend/frontend-service.yaml | kubectl apply -f -
-        - mo deploy/backend/frontend-deployment.yaml | kubectl delete -f - || true
-        - mo deploy/backend/frontend-deployment.yaml | kubectl apply -f -
+        - mo deploy/frontend/frontend-service.yaml | kubectl apply -f -
+        - mo deploy/frontend/frontend-deployment.yaml | kubectl delete -f - || true
+        - mo deploy/frontend/frontend-deployment.yaml | kubectl apply -f -
 
 deploy-persistent-cache:
     stage: deploy
