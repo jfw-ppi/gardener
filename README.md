@@ -40,14 +40,111 @@ Das Data-Tier speichert alle erforderlichen Daten, einschließlich Pflanzendaten
 
 ## 3. Backend
 ### 3.1 Datensatzaufbereitung
-Die EcoCrop-Datenbank, die umfangreiche Informationen zu den klimatischen Anforderungen vieler Pflanzen enthält, wird vor der Nutzung in der App aufbereitet. Diese Aufbereitung umfasst die Bereinigung und Transformation der Daten, um sicherzustellen, dass sie den Anforderungen der App entsprechen.
 
+Die EcoCrop-Datenbank, die umfangreiche Informationen zu den klimatischen Anforderungen vieler Pflanzen enthält, wird vor der Nutzung in der App umfassend aufbereitet. Diese Aufbereitung umfasst die Bereinigung und Transformation der Daten, um sicherzustellen, dass sie den Anforderungen der App entsprechen.
+
+#### 3.1.1 Schritte der Datenaufbereitung:
+
+
+1. **Erkennung und Visualisierung von fehlenden Werten**:  
+   Zunächst wird eine Analyse der fehlenden oder leeren Werte in den verschiedenen Feldern durchgeführt. Dabei werden fehlende Werte (NA) und leere Strings kombiniert und die Anzahl der fehlenden Werte für jede Spalte visualisiert. Vor der Transformation sah die Verteilung der fehlenden Werte folgendermaßen aus:
+
+   ![Fehlende Werte vor der Transformation](webtechpj/backend/resources/data-report/missing_before.png)
+
+2. **Bereinigung von Werten**:  
+   Die Bereinigung erfolgt in mehreren Schritten:
+   - **Schritt 1**: Entfernen von Einträgen, bei denen der Wert von `TOPMN` (minimale optimale Temperatur) über 40°C liegt. In diesem Schritt wurden 1 Eintrag entfernt.
+   - **Schritt 2**: Für Zeilen, in denen `KTMP` (Kälte-Toleranz-Temperatur) fehlt, wird dieser Wert mit `TMIN - 5°C` (5 Grad unter der minimalen Temperatur) ersetzt. Insgesamt wurden in 1410 Zeilen die fehlenden KTMP-Werte gefüllt.
+   - **Schritt 3**: Prüfung und Bereinigung der Breitenkoordinaten. Für Felder mit Breitenwerten (`LATOPMN`, `LATOPMX`, `LATMN`, `LATMX`), die außerhalb des gültigen Bereichs von -90 bis 90 Grad liegen, wurden die Werte als ungültig markiert und auf NA gesetzt. Dies betraf:
+     - 2 Einträge in `LATOPMN`,
+     - 3 Einträge in `LATOPMX`,
+     - 5 Einträge in `LATMN`,
+     - 7 Einträge in `LATMX`.
+   - **Schritt 4**: Fehlende oder leere Werte für `GMAX` (maximale Wachstumsperiode) und `GMIN` (minimale Wachstumsperiode) wurden standardmäßig auf 0 gesetzt. Dies betraf 2 Einträge in `GMAX`.
+
+3. **Entfernung unvollständiger Zeilen**:  
+   Nachdem alle oben genannten Bereinigungen durchgeführt wurden, wurden alle Zeilen entfernt, die immer noch NA-Werte in den relevanten Feldern (`TOPMN`, `TOPMX`, `TMIN`, `TMAX`, `ROPMN`, `ROPMX`, `RMIN`, `RMAX`, `GMIN`, `GMAX`, `KTMP`) enthalten. In diesem Schritt wurden insgesamt 505 Zeilen entfernt.
+
+   Nach der Transformation enthält der bereinigte Datensatz 2062 Zeilen und 55 Spalten.
+
+4. **Visualisierung der bereinigten Daten**:  
+   Nach der Bereinigung wurden erneut die fehlenden Werte visualisiert, um sicherzustellen, dass keine relevanten Felder mehr unvollständige Daten enthalten.
+
+   ![Fehlende Werte nach der Transformation](webtechpj/backend/resources/data-report/missing_after.png)
+
+5. **Analyse der numerischen Felder**:  
+   Eine weitere Analyse der Werteverteilungen der numerischen Felder wurde nach der Transformation durchgeführt. Diese Boxplot-Analyse gibt einen Überblick über die Verteilung der Temperatur- und Niederschlagsgrenzwerte (`TOPMN`, `TOPMX`, `TMIN`, `TMAX`, `ROPMN`, `ROPMX`, `RMIN`, `RMAX`, `GMIN`, `GMAX`, `KTMP`).
+
+   ![Werteverteilung nach der Transformation](webtechpj/backend/resources/data-report/distributions_after.png)
+
+   Eine detaillierte Zusammenfassung der durchgeführten Bereinigungen und Transformationen ist in der Datei [transformation_summary.txt](webtechpj/backend/resources/data-report/transformation_summary.txt) verfügbar.
++++
 ### 3.2 Wetterdaten Handling
 Das Backend ruft historische Wetterdaten von der Open Meteo API ab und verarbeitet diese, um sie in die Berechnung des Suitability Scores einfließen zu lassen.
 
 ### 3.3 Suitability Score
 Der Suitability Score wird basierend auf den abgerufenen Wetterdaten und den Anforderungen der Pflanzenarten berechnet. Dabei wird eine vereinfachte Methode verwendet, um eine schnelle und dennoch aussagekräftige Bewertung zu ermöglichen.
 
+#### 3.3.1 **Temperatur-Eignungspunktzahl**
+
+Die Temperatur wird auf täglicher Basis in drei Parametern bewertet:
+- **Tageshöchsttemperatur (max)**: `temperature_2m_max`
+- **Tagesminimumtemperatur (min)**: `temperature_2m_min`
+- **Tagesdurchschnittstemperatur (mean)**: `temperature_2m_mean`
+
+Für jede dieser drei Temperaturen wird ein Punktwert (0–100) auf Grundlage der optimalen und maximal/minimal tolerierbaren Temperaturen der Pflanze berechnet:
+
+**Formel für die Temperatur-Eignung:**
+- Innerhalb des optimalen Temperaturbereichs: Punktzahl = 100
+- Außerhalb, aber innerhalb der Toleranz: Die Punktzahl nimmt linear ab von 100 auf 50, je nachdem, wie weit die Temperatur vom optimalen Bereich entfernt ist.
+- Bei Temperaturen außerhalb der Toleranz: Die Punktzahl sinkt auf 0.
+
+Die vollständige Formel lautet:
+```python
+if plant.TOPMN <= temperature <= plant.TOPMX:
+    temp_score = 100  # Perfekt innerhalb des optimalen Bereichs
+elif plant.TMIN <= temperature < plant.TOPMN:
+    temp_score = 50 + 50 * (temperature - plant.TMIN) / (plant.TOPMN - plant.TMIN)  # Linearer Abfall
+elif plant.TOPMX < temperature <= plant.TMAX:
+    temp_score = 50 + 50 * (plant.TMAX - temperature) / (plant.TMAX - plant.TOPMX)  # Linearer Abfall
+else:
+    deviation = abs(temperature - (plant.TMAX if temperature > plant.TMAX else plant.TMIN))
+    temp_score = max(0, 100 - deviation * 10)  # Starkes Absinken bei extremen Abweichungen
+```
+
+Die Eignung der täglichen Temperatur wird als Mittelwert der Punktzahlen für die **maximale**, **minimale** und **durchschnittliche** Temperatur berechnet:
+```python
+temp_score = (temp_mean_score + temp_min_score + temp_max_score) / 3
+```
+
+#### 3.3.2. **Niederschlagseignungspunktzahl**
+
+Der Niederschlag wird über einen Zeitraum von 30 Tagen summiert und auf ein Jahr hochgerechnet. Der jährliche Niederschlag wird dann mit den optimalen und minimal/maximal tolerierbaren Niederschlagsmengen der Pflanze verglichen.
+
+**Formel für die Niederschlagseignung:**
+- Innerhalb des optimalen Niederschlagsbereichs: Punktzahl = 100
+- Außerhalb, aber innerhalb der Toleranz: Punktzahl = Linearer Abfall von 100 auf 50
+- Außerhalb der Toleranz: Punktzahl = Lineares Absinken auf 0
+
+```python
+if plant.ROPMN <= annualized_precipitation <= plant.ROPMX:
+    precip_score = 100  # Perfekt innerhalb des optimalen Bereichs
+elif plant.RMIN <= annualized_precipitation < plant.ROPMN:
+    precip_score = 50 + 50 * (annualized_precipitation - plant.RMIN) / (plant.ROPMN - plant.RMIN)
+elif plant.ROPMX < annualized_precipitation <= plant.RMAX:
+    precip_score = 50 + 50 * (plant.RMAX - annualized_precipitation) / (plant.RMAX - plant.ROPMX)
+else:
+    deviation = abs(annualized_precipitation - (plant.RMAX if annualized_precipitation > plant.RMAX else plant.RMIN))
+    precip_score = max(0, 100 - deviation * 10)  # Starkes Absinken bei extremen Abweichungen
+```
+
+#### 3.3.4 **Kombinierter Suitability Score**
+
+Der Suitability Score für jeden Tag basiert auf dem Mittelwert der Temperatur- und Niederschlagseignungen. Der endgültige Suitability Score ist der Durchschnitt der täglichen Werte über den betrachteten Zeitraum (30 Tage):
+```python
+daily_score = (temp_score + precip_score) / 2
+final_suitability_score = sum(suitability_scores) / len(suitability_scores)
+```
 ### 3.4 Datenbankhandling
 Die Anwendung überprüft die Datenbank auf vorhandene Einträge und lädt die erforderlichen Daten aus der CSV-Datei, wenn Einträge fehlen. Dies gewährleistet, dass die Datenbank stets die notwendigen Informationen für die Berechnungen enthält.
 
@@ -116,7 +213,7 @@ Das folgende Diagramm zeigt die Gesamtarchitektur der App in der Kubernetes-Umge
 ### 6.2 Komponenten
 
 1. **Frontend**:  
-   Das Frontend basiert auf Streamlit und stellt die Benutzeroberfläche bereit, über die der Endnutzer interagiert. Es empfängt Benutzeranfragen über einen Webbrowser, visualisiert Daten und kommuniziert mit dem Backend über API-Calls. Das Frontend wird über einen Kubernetes-Service bereitgestellt und ist durch einen Ingress-Controller von außen zugänglich. Die Ingress-Rules leiten die HTTP-Anfragen an den entsprechenden Service im Cluster weiter.
+   Das Frontend basiert auf Streamlit und stellt die Benutzeroberfläche bereit, über die der Endnutzer interagiert. Es empfängt Benutzeranfragen über einen Webbrowser, visualisiert Daten und kommuniziert mit dem Backend, sowie dem LLM Endpunkt über API-Calls. Das Frontend wird über einen Kubernetes-Service bereitgestellt und ist durch einen Ingress-Controller von außen zugänglich. Die Ingress-Rules leiten die HTTP-Anfragen an den entsprechenden Service im Cluster weiter.
 
 2. **Backend (API/Business-Logic)**:  
    Das Backend der Gardening App ist verantwortlich für die Hauptlogik der Anwendung, einschließlich der Verarbeitung von Pflanzendaten, dem Abruf von Wetterdaten und der Berechnung der Suitability Scores. Es kommuniziert mit dem PostgreSQL-Data-Tier, um Pflanzendaten zu speichern und abzurufen, und stellt API-Endpunkte für das Frontend bereit. Auch das Backend wird über einen Kubernetes-Service bereitgestellt und über einen eigenen Ingress von außen erreichbar gemacht.
@@ -158,16 +255,17 @@ Die App wird im Rahmen einer Continuous Deployment Pipeline bereitgestellt, die 
 Durch den Einsatz von Kubernetes in Kombination mit einer kontinuierlichen Deployment-Pipeline wird sichergestellt, dass die Gardening App jederzeit skalierbar, hochverfügbar und robust bereitgestellt werden kann. Die Architektur ermöglicht eine klare Trennung der Verantwortlichkeiten zwischen dem Frontend, Backend und Data-Tier, wobei die Kommunikation über Kubernetes-Services und Ingress-Routen gesteuert wird.
 
 ## 7. Abdeckung der Anforderungen
-| Anforderung | Umsetzung                                                                                                                                                                                                                                                    | Begründung                                                                                                                                                             |
-|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| AF-1: DevOps / Continuous Deployment | Kubernetes Deployment                                                                                                                                                                                                                                        | Skalierbares und automatisiertes Deployment durch Kubernetes.                                                                                                          |
-| AF-2: Balance zwischen technischer Komplexität und Nutzungsfreude | Minimale Anzahl an Bedienelementen, keine Notwendigkeit für den Nutzer sich mit Berechnung des Suitability Score auseinanderzusetzen, graphische Untermalung der Wetterdaten, Prompt Engineering für für Laien verständlichen freundlich-witzigen Assistenten|
-| AF-3: WebUI == Streamlit | Nutzung von Streamlit                                                                                                                                                                                                                                        | Streamlit bietet eine einfache Möglichkeit, interaktive WebUIs zu erstellen.                                                                                           |
-| AF-4: LLMs und Backend-Services | LLM-Nutzung im Frontend                                                                                                                                                                                                                                      | Es wird das Chat LTS der TH Lübeck, sowie die frei(ohne API Key) verfügbaren API's open-meteo.com und geocode.xyz                                                      |
-| AF-5: Intuitive Bedienbarkeit | Einfaches, klares UI                                                                                                                                                                                                                                         | Die App ist intuitiv und ohne lange Einarbeitungszeit bedienbar.                                                                                                       |
-| AF-6: Stateful Backend (Optional) | Verwendung von PostgreSQL                                                                                                                                                                                                                                    | Mangels verfügbarer API werden die Pflanzendaten aus der .csv bei Serverstart in die PostgreSQL-Datenbank geladen und werden über eine REST API zur Verfügung gestellt |
-| AF-7: Wiederverwenden von Grafiken oder anderen gestaltenden Elementen | Nutzung von CC-lizenzierten Bildern                                                                                                                                                                                                                          | Einhaltung von Lizenzanforderungen bei der Nutzung von Grafiken.                                                                                                       |
-| AF-8: Dokumentation | Umfassende README.md und GitLab Wiki                                                                                                                                                                                                                         | Vollständige Dokumentation der Architektur und Funktionen der App.                                                                                                     |
+| Anforderung                                                            | Umsetzung                                                                                                                                                                                                                                                     | Begründung                                                                                                                                                             |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| AF-1: DevOps / Continuous Deployment                                   | Kubernetes Deployment                                                                                                                                                                                                                                         | Skalierbares und automatisiertes Deployment durch Kubernetes.                                                                                                          |
+| AF-2: Balance zwischen technischer Komplexität und Nutzungsfreude      | Minimale Anzahl an Bedienelementen, keine Notwendigkeit für den Nutzer sich mit Berechnung des Suitability Score auseinanderzusetzen, graphische Untermalung der Wetterdaten, Prompt Engineering für für Laien verständlichen freundlich-witzigen Assistenten |
+| AF-3: WebUI == Streamlit                                               | Nutzung von Streamlit                                                                                                                                                                                                                                         | Streamlit bietet eine einfache Möglichkeit, interaktive WebUIs zu erstellen.                                                                                           |
+| AF-4: LLMs und Backend-Services                                        | LLM-Nutzung im Frontend                                                                                                                                                                                                                                       | Es wird das Chat LTS der TH Lübeck, sowie die frei(ohne API Key) verfügbaren API's open-meteo.com und geocode.xyz                                                      |
+| AF-5: Intuitive Bedienbarkeit                                          | Einfaches, klares UI                                                                                                                                                                                                                                          | Die App ist intuitiv und ohne lange Einarbeitungszeit bedienbar.                                                                                                       |
+| AF-6: Stateful Backend (Optional)                                      | Verwendung von PostgreSQL                                                                                                                                                                                                                                     | Mangels verfügbarer API werden die Pflanzendaten aus der .csv bei Serverstart in die PostgreSQL-Datenbank geladen und werden über eine REST API zur Verfügung gestellt |
+| AF-7: Wiederverwenden von Grafiken oder anderen gestaltenden Elementen | Nutzung von CC-lizenzierten Bildern                                                                                                                                                                                                                           | Einhaltung von Lizenzanforderungen bei der Nutzung von Grafiken.                                                                                                       |
+| AF-8: Dokumentation                                                    | Umfassende README.md und GitLab Wiki                                                                                                                                                                                                                          | Vollständige Dokumentation der Architektur und Funktionen der App.                                                                                                     |
 
 ## 8. Quellen
-- [EcoCrop Readme](https://github.com/OpenCLIM/ecocrop)
+- [EcoCrop Readme](https://github.com/OpenCLIM/ecocrop)+
+- [Lab 06: Orchestration Lab-k8s] (https://git.mylab.th-luebeck.de/cloud-native/lab-k8s)+
