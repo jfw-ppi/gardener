@@ -20,9 +20,11 @@ def calculate_temperature_suitability(temperature_min, temperature_max, temperat
     if plant.TOPMN <= temperature_mean <= plant.TOPMX:
         temp_mean_score = 100  # Perfect score within the optimal range
     elif plant.TMIN <= temperature_mean < plant.TOPMN:
-        temp_mean_score = 50 + 50 * (temperature_mean - plant.TMIN) / (plant.TOPMN - plant.TMIN)  # Linear between TMIN and TOPMN
+        temp_mean_score = 50 + 50 * (temperature_mean - plant.TMIN) / (
+                    plant.TOPMN - plant.TMIN)  # Linear between TMIN and TOPMN
     elif plant.TOPMX < temperature_mean <= plant.TMAX:
-        temp_mean_score = 50 + 50 * (plant.TMAX - temperature_mean) / (plant.TMAX - plant.TOPMX)  # Linear between TOPMX and TMAX
+        temp_mean_score = 50 + 50 * (plant.TMAX - temperature_mean) / (
+                    plant.TMAX - plant.TOPMX)  # Linear between TOPMX and TMAX
     else:
         deviation = abs(temperature_mean - (plant.TMAX if temperature_mean > plant.TMAX else plant.TMIN))
         temp_mean_score = max(0, 100 - deviation * 10)  # Aggressively reduce score for extreme deviations
@@ -54,9 +56,9 @@ def calculate_temperature_suitability(temperature_min, temperature_max, temperat
     return temp_score
 
 
-def calculate_suitability_score(weather_data, plant):
+def calculate_suitability_score(weather_data, plant) -> int:
     """
-    Calculate the overall suitability score for a 30-day period based on historical daily weather data.
+    Calculate the overall suitability score [0,100] for a 30-day period based on historical daily weather data.
     This approach averages daily temperature suitability scores and uses a fixed precipitation score.
     """
 
@@ -72,7 +74,8 @@ def calculate_suitability_score(weather_data, plant):
     elif plant.ROPMX < annualized_precipitation <= plant.RMAX:
         precip_score = 50 + 50 * (plant.RMAX - annualized_precipitation) / (plant.RMAX - plant.ROPMX)
     else:
-        deviation = abs(annualized_precipitation - (plant.RMAX if annualized_precipitation > plant.RMAX else plant.RMIN))
+        deviation = abs(
+            annualized_precipitation - (plant.RMAX if annualized_precipitation > plant.RMAX else plant.RMIN))
         precip_score = max(0, 100 - deviation * 10)
 
     logger.info(f"Annualized Precipitation: {annualized_precipitation}, Precipitation Score: {precip_score}")
@@ -94,7 +97,7 @@ def calculate_suitability_score(weather_data, plant):
     # Return the average suitability score over the 30-day period
     final_suitability_score = sum(suitability_scores) / len(suitability_scores)
 
-    return final_suitability_score
+    return int(final_suitability_score)
 
 
 async def get_plant_data_by_scientific_name(scientific_name: str, session: AsyncSession) -> Plant:
@@ -168,7 +171,8 @@ async def get_weather_and_suitability(location, scientific_name, session: AsyncS
 
     # Calculate the final suitability score using the daily max/min/mean temperatures and annualized precipitation
     final_suitability_score = calculate_suitability_score(
-        {"temperature_2m_max": temperature_2m_max, "temperature_2m_min": temperature_2m_min, "temperature_2m_mean": temperature_2m_mean, "precipitation_sum": precipitation_sum},
+        {"temperature_2m_max": temperature_2m_max, "temperature_2m_min": temperature_2m_min,
+         "temperature_2m_mean": temperature_2m_mean, "precipitation_sum": precipitation_sum},
         plant
     )
 

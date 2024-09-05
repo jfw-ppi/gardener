@@ -16,7 +16,7 @@ def _clean_llm_output(generated_text):
         generated_text = generated_text.split("P.S.")[0]
 
     # Then, remove any Python code-like content starting with common keywords
-    stop_keywords = ["import", "def", "class"]
+    stop_keywords = ["python", "import", "def", "class"]
     for keyword in stop_keywords:
         if keyword in generated_text:
             generated_text = generated_text.split(keyword)[0]  # Stop at the first occurrence of any keyword
@@ -43,7 +43,6 @@ client = HuggingFaceEndpoint(
     timeout=30,
     streaming=True
 )
-
 
 # Define the refined prompt template with a fun, personalized touch
 prompt_template = PromptTemplate.from_template("""
@@ -72,6 +71,7 @@ Suitability Score Legend:
 - 61-80: 🙂 Good - Conditions are favorable for this plant.
 - 81-100: 🌞 Excellent - Ideal growing conditions.
 
+Warnings: {warnings}
 
 ### Response Instructions:
 1. Greet the user in a fun way.
@@ -145,7 +145,8 @@ if plant_name:
         plant_details = plant_details_response.json()[0]  # We expect one plant per scientific name
 
         st.subheader(f"🌿 Plant Details: {plant_name}")
-        st.write("Here are the details for the selected plant. Optionally review and download them as .csv before proceeding to calculate suitabiltiy score.")
+        st.write(
+            "Here are the details for the selected plant. Optionally review and download them as .csv before proceeding to calculate suitabiltiy score.")
 
         field_descriptions = {
             'EcoPortCode': 'A unique identifier for each crop entry in the database.',
@@ -288,6 +289,7 @@ if plant_name:
                         temperature_data=weather_data['temperature_2m_mean'],
                         precipitation_data=weather_data['precipitation_sum'],
                         suitability_score=suitability_score,
+                        warnings="; ".join([]),
                         current_date=current_date
                     )
 
@@ -295,6 +297,9 @@ if plant_name:
                     clean_text = _clean_llm_output(response.generations[0][0].text.strip())
                     st.write("📜 Analysis Report:")
                     st.write(clean_text)
+
+                    st.write("📜 Debug response:")
+                    st.write(response)
                 else:
                     st.error("🚨 Failed to fetch suitability data. Please try again.")
             else:
