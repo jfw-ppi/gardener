@@ -298,7 +298,8 @@ if plant_name:
                     st.write(clean_text)
 
                 else:
-                    st.error("🚨 Failed to fetch suitability data. Please try again.")
+                    st.error(
+                        "🚨 Failed to fetch suitability data. This can happen due to external API restrictions. Please wait a few seconds and try again.")
             else:
                 st.error("🚨 Failed to fetch plant details. Please try again.")
 
