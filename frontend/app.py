@@ -270,7 +270,7 @@ if plant_name:
                     st.pyplot(fig)
 
                     st.info(
-                        "The weather data is collected and averaged over the past 30 days to provide an accurate analysis of current growing conditions.")
+                        "The weather data is collected over the past 30 days to provide an accurate analysis of current growing conditions.")
 
                     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
                     prompt = prompt_template.format(
