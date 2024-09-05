@@ -39,7 +39,7 @@ api_url = f"{base_url}:{port}"
 
 # Initialize Llama 3b client
 client = HuggingFaceEndpoint(
-    endpoint_url="https://chat-default.llm.mylab.th-luebeck.dev/",
+    endpoint_url="https://chat-lts.models.th-luebeck.dev/",
     timeout=30,
     streaming=True
 )
