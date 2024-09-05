@@ -213,9 +213,8 @@ if plant_name:
             "Description": [field_descriptions.get(key, "No description available.") for key in plant_details.keys()],
             "Value": list(plant_details.values())
         })
-
-        # Convert the DataFrame to CSV for download
-        plant_csv = plant_df.to_csv(index=False).encode('utf-8')
+        # Convert the DataFrame as strings and to CSV for download
+        plant_csv = plant_df.astype(str).to_csv(index=False).encode('utf-8')
 
         # Provide a download button for the plant data
         st.download_button(
@@ -298,8 +297,6 @@ if plant_name:
                     st.write("📜 Analysis Report:")
                     st.write(clean_text)
 
-                    st.write("📜 Debug response:")
-                    st.write(response)
                 else:
                     st.error("🚨 Failed to fetch suitability data. Please try again.")
             else:
