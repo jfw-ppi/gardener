@@ -22,7 +22,6 @@
 5. [Frontend](#5-frontend)
    1. [Visualisieren der Wetterdaten](#51-visualisieren-der-wetterdaten)
    2. [Handling von LLM Prompting und Prompt Engineering](#52-handling-von-llm-prompting-und-prompt-engineering)
-   3. [Begründung für LLM Handling im Frontend](#53-begründung-für-llm-handling-im-frontend)
 6. [Deployment mit Kubernetes](#6-deployment-mit-kubernetes)
    1. [Architekturübersicht](#61-architekturübersicht)
    2. [Komponenten](#62-komponenten)
@@ -41,12 +40,14 @@ Ziel der App ist es, die Gartenplanung zu optimieren, indem eine einfache, aber 
 
 ## 2. Gesamtarchitektur
 ### 2.1 Backend
+Erreichbar unter: https://plantsapi-13434.edu.k8s.th-luebeck.dev/
 Das Backend der Gardening App ist darauf ausgelegt, die Hauptlogik der Anwendung zu handhaben, einschließlich der Verarbeitung von Pflanzendaten und Wetterinformationen sowie der Berechnung der Eignungsbewertung (Suitability Score). Es umfasst mehrere zentrale Komponenten, die nachfolgend erläutert werden.
 
 ### 2.2 Data-Tier
 Das Data-Tier speichert alle erforderlichen Daten, einschließlich Pflanzendaten und historischen Wetterinformationen, die für die Eignungsbewertung erforderlich sind. Die Daten werden in einer PostgreSQL-Datenbank verwaltet.
 
 ### 2.3 Frontend
+Erreichbar unter: https://gardener-13434.edu.k8s.th-luebeck.dev/
 Das Frontend benutzt die vom Backend bereitgestellte API um die Daten für die vom Nutzer gewählte Kombination aus Standort und Pflanze in ein LLM zu übergeben.
 Außerdem werden die Pflanzendaten für den Nutzer dargestellt, als Download angeboten und die Wetterdaten als Graph visualiert.
 ## 3. Backend
@@ -182,9 +183,9 @@ Das Frontend visualisiert die historischen Wetterdaten der letzten 30 Tage in ei
 In der Gardening App wird ein **Large Language Model (LLM)** verwendet, um personalisierte und benutzerfreundliche Berichte zu generieren, die den Nutzern wertvolle Einblicke in die Anbaubedingungen für ihre Pflanzen geben. Dies geschieht durch ein **Prompt Engineering**, bei dem sorgfältig gestaltete Vorlagen verwendet werden, um die Ausgaben des Modells auf die spezifischen Anforderungen der Benutzer abzustimmen. 
 
 #### Verwendetes LLM:
-| Name     | Endpunkt-URL                                            | LLM         | Bleibt bis min.    |
-|----------|----------------------------------------------------------|-------------|-------------------|
-| Chat LTS | [https://chat-lts.models.th-luebeck.dev](https://chat-lts.models.th-luebeck.dev) | Llama 3 8B   | 28.2.2025          |
+| Name     | Endpunkt-URL                                                                     | LLM        | Bleibt bis min. |
+|----------|----------------------------------------------------------------------------------|------------|-----------------|
+| Chat LTS | [https://chat-lts.models.th-luebeck.dev](https://chat-lts.models.th-luebeck.dev) | Llama 3 8B | 28.2.2025       |
 
 Das Modell wird über einen speziell entwickelten **Prompt Template** angesteuert, das sicherstellt, dass die Antworten in einer leicht verständlichen, interaktiven und oft humorvollen Art und Weise präsentiert werden, um die Benutzererfahrung zu verbessern. 
 
