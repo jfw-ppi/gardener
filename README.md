@@ -1,7 +1,7 @@
-# Gardening App Documentation
+# Gardener App Documentation
 
 ## Inhaltsverzeichnis
-1. [Motivation und Zweck der Gardening App](#1-motivation-und-zweck-der-gardening-app)
+1. [Motivation und Zweck der Gardener App](#1-motivation-und-zweck-der-gardener-app)
 2. [Gesamtarchitektur](#2-gesamtarchitektur)
    1. [Backend](#21-backend)
    2. [Data-Tier](#22-data-tier)
@@ -31,8 +31,8 @@
 7. [Abdeckung der Anforderungen](#7-abdeckung-der-anforderungen)
 8. [Quellen](#8-quellen)
 
-## 1. Motivation und Zweck der Gardening App
-Die Gardening App wurde entwickelt, um Hobbygärtnern eine einfache und effektive Möglichkeit zu bieten, den optimalen Aussaatzeitpunkt für verschiedene Pflanzenarten basierend auf eigenen Wetterdaten zu bestimmen. Die App führt dabei eine grobe, aber dennoch zuverlässige Analyse durch, die es den Benutzern ermöglicht, fundierte Entscheidungen für ihre Gartenplanung zu treffen.
+## 1. Motivation und Zweck der Gardener App
+Die Gardener App wurde entwickelt, um Hobbygärtnern eine einfache und effektive Möglichkeit zu bieten, den optimalen Aussaatzeitpunkt für verschiedene Pflanzenarten basierend auf eigenen Wetterdaten zu bestimmen. Die App führt dabei eine grobe, aber dennoch zuverlässige Analyse durch, die es den Benutzern ermöglicht, fundierte Entscheidungen für ihre Gartenplanung zu treffen.
 
 Ein besonderer Vorteil der App liegt in der Nutzung der EcoCrop-Datenbank, die von der UN entwickelt wurde und eine umfassende Sammlung klimatischer Anforderungen für eine Vielzahl von Pflanzenarten enthält. Die Komplexität des vollständigen EcoCrop-Modells übersteigt jedoch die Anforderungen vieler Benutzer und ist aufgrund fehlender, exakt passender Daten für das Modell oft nicht anwendbar. Daher wurde die Berechnung der Suitability Scores vereinfacht, um eine benutzerfreundliche und dennoch informative Lösung zu bieten, die speziell auf die Bedürfnisse von Hobbygärtnern zugeschnitten ist.
 
@@ -168,7 +168,7 @@ Die REST API des Backends stellt verschiedene Endpunkte bereit, über die das Fr
 
 ### 3.6 Swagger-UI und API-Dokumentation
 Die REST API des Backends ist automatisch mittels einer **Swagger-UI** dokumentiert. Die Swagger-Dokumentation kann unter folgendem Link aufgerufen werden:  
-[Swagger Dokumentation der Gardening API](https://plantsapi-13434.edu.k8s.th-luebeck.dev/docs)
+[Swagger Dokumentation der plants API](https://plantsapi-13434.edu.k8s.th-luebeck.dev/docs)
 
 ## 4. Data-Tier
 ### 4.1 Datenmodell (models.py)
@@ -180,7 +180,7 @@ Das Frontend visualisiert die historischen Wetterdaten der letzten 30 Tage in ei
 
 ### 5.2 Handling von LLM Prompting und Prompt Engineering
 
-In der Gardening App wird ein **Large Language Model (LLM)** verwendet, um personalisierte und benutzerfreundliche Berichte zu generieren, die den Nutzern wertvolle Einblicke in die Anbaubedingungen für ihre Pflanzen geben. Dies geschieht durch ein **Prompt Engineering**, bei dem sorgfältig gestaltete Vorlagen verwendet werden, um die Ausgaben des Modells auf die spezifischen Anforderungen der Benutzer abzustimmen. 
+In der Gardener App wird ein **Large Language Model (LLM)** verwendet, um personalisierte und benutzerfreundliche Berichte zu generieren, die den Nutzern wertvolle Einblicke in die Anbaubedingungen für ihre Pflanzen geben. Dies geschieht durch ein **Prompt Engineering**, bei dem sorgfältig gestaltete Vorlagen verwendet werden, um die Ausgaben des Modells auf die spezifischen Anforderungen der Benutzer abzustimmen. 
 
 #### Verwendetes LLM:
 | Name     | Endpunkt-URL                                                                     | LLM        | Bleibt bis min. |
@@ -199,11 +199,11 @@ Das Frontend der App ruft das LLM auf, sobald der Benutzer eine Pflanze und eine
 
 ## 6. Deployment mit Kubernetes
 
-Das Deployment der Gardening App erfolgt vollständig automatisiert und containerisiert auf einer Kubernetes-Plattform, was die Skalierbarkeit und Flexibilität der App gewährleistet. Dieser Abschnitt beschreibt die Architektur des Deployments, die verwendeten Komponenten sowie deren Zusammenspiel innerhalb der Kubernetes-Umgebung.
+Das Deployment der Gardener App erfolgt vollständig automatisiert und containerisiert auf einer Kubernetes-Plattform, was die Skalierbarkeit und Flexibilität der App gewährleistet. Dieser Abschnitt beschreibt die Architektur des Deployments, die verwendeten Komponenten sowie deren Zusammenspiel innerhalb der Kubernetes-Umgebung.
 
 ### 6.1 Architekturübersicht
 
-Die Gardening App besteht aus drei Hauptkomponenten: dem Frontend, dem Backend und dem Data-Tier (PostgreSQL). Alle Komponenten sind containerisiert und werden in einem Kubernetes-Cluster ausgeführt, wobei der Betrieb durch automatisierte Continuous Deployment-Pipelines ermöglicht wird. Die Kubernetes-Ressourcen werden über Kubernetes-Manifeste beschrieben und mittels GitLab CI/CD automatisch bereitgestellt.
+Die Gardener App besteht aus drei Hauptkomponenten: dem Frontend, dem Backend und dem Data-Tier (PostgreSQL). Alle Komponenten sind containerisiert und werden in einem Kubernetes-Cluster ausgeführt, wobei der Betrieb durch automatisierte Continuous Deployment-Pipelines ermöglicht wird. Die Kubernetes-Ressourcen werden über Kubernetes-Manifeste beschrieben und mittels GitLab CI/CD automatisch bereitgestellt.
 
 Das folgende Diagramm zeigt die Gesamtarchitektur der App in der Kubernetes-Umgebung:
 
@@ -215,7 +215,7 @@ Das folgende Diagramm zeigt die Gesamtarchitektur der App in der Kubernetes-Umge
    Das Frontend basiert auf Streamlit und stellt die Benutzeroberfläche bereit, über die der Endnutzer interagiert. Es empfängt Benutzeranfragen über einen Webbrowser, visualisiert Daten und kommuniziert mit dem Backend, sowie dem LLM-Endpunkt über API-Calls. Das Frontend wird über einen Kubernetes-Service bereitgestellt und ist durch einen Ingress-Controller von außen zugänglich. Die Ingress-Rules leiten die HTTP-Anfragen an den entsprechenden Service im Cluster weiter.
 
 2. **Backend (API/Business-Logic)**:  
-   Das Backend der Gardening App ist verantwortlich für die Hauptlogik der Anwendung, einschließlich der Verarbeitung von Pflanzendaten, dem Abruf von Wetterdaten und der Berechnung der Suitability Scores. Es kommuniziert mit dem PostgreSQL-Data-Tier, um Pflanzendaten zu speichern und abzurufen, und stellt API-Endpunkte für das Frontend bereit. Auch das Backend wird über einen Kubernetes-Service bereitgestellt und über einen eigenen Ingress von außen erreichbar gemacht.
+   Das Backend der Gardener App ist verantwortlich für die Hauptlogik der Anwendung, einschließlich der Verarbeitung von Pflanzendaten, dem Abruf von Wetterdaten und der Berechnung der Suitability Scores. Es kommuniziert mit dem PostgreSQL-Data-Tier, um Pflanzendaten zu speichern und abzurufen, und stellt API-Endpunkte für das Frontend bereit. Auch das Backend wird über einen Kubernetes-Service bereitgestellt und über einen eigenen Ingress von außen erreichbar gemacht.
 
 3. **Data-Tier (PostgreSQL)**:  
    Das PostgreSQL-Datenbanksystem dient als persistent Speicher für alle relevanten Pflanzendaten. Diese Komponente ist nicht öffentlich zugänglich und kommuniziert
@@ -253,7 +253,7 @@ Die App wird im Rahmen einer Continuous Deployment Pipeline bereitgestellt, die 
 
 ### 6.5 Zusammenfassung
 
-Durch den Einsatz von Kubernetes in Kombination mit einer kontinuierlichen Deployment-Pipeline wird sichergestellt, dass die Gardening App jederzeit skalierbar, hochverfügbar und robust bereitgestellt werden kann. Die Architektur ermöglicht eine klare Trennung der Verantwortlichkeiten zwischen dem Frontend, Backend und Data-Tier, wobei die Kommunikation über Kubernetes-Services und Ingress-Routen gesteuert wird.
+Durch den Einsatz von Kubernetes in Kombination mit einer kontinuierlichen Deployment-Pipeline wird sichergestellt, dass die Gardener App jederzeit skalierbar, hochverfügbar und robust bereitgestellt werden kann. Die Architektur ermöglicht eine klare Trennung der Verantwortlichkeiten zwischen dem Frontend, Backend und Data-Tier, wobei die Kommunikation über Kubernetes-Services und Ingress-Routen gesteuert wird.
 
 ## 7. Abdeckung der Anforderungen
 | Anforderung                                                            | Umsetzung                                                                                                                                                                                                                                                     | Begründung                                                                                                                                                             |
