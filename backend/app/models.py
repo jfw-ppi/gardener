@@ -223,7 +223,6 @@ class PlantModel(BaseModel):
 
 class SuitabilityDetails(BaseModel):
     suitability_score: float
-    warnings: List[str]
     interval_used: int
 
 

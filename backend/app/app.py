@@ -6,12 +6,9 @@ from fastapi import FastAPI
 
 from .data_transformer import transform_ecocrop_data
 from .database import async_session_maker, engine
+from .logging import logger
 from .models import Plant, Base
 from .plant_router import get_plant_router
-
-# Setup logger
-log_writer = logging.getLogger(__name__)
-log_writer.setLevel(logging.INFO)
 
 
 @asynccontextmanager
@@ -19,18 +16,18 @@ async def lifespan(app: FastAPI):
     # Use the engine to create all tables before starting the session
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        log_writer.info("Database schema created successfully.")
+        logger.info("Database schema created successfully.")
 
-    log_writer.info("Creating cleaned dataset")
+    logger.info("Creating cleaned dataset")
     transform_ecocrop_data()
-    log_writer.info("Finished creating cleaned dataset")
+    logger.info("Finished creating cleaned dataset")
 
-    log_writer.info("Loading Plants into DB")
+    logger.info("Loading Plants into DB")
     await load_data()
-    log_writer.info("Finished Loading Plants into DB")
+    logger.info("Finished Loading Plants into DB")
 
     yield
-    log_writer.info("Shutting down API...")
+    logger.info("Shutting down API...")
 
 
 app = FastAPI(lifespan=lifespan)

@@ -4,3 +4,4 @@ matplotlib
 langchain
 langchain_huggingface
 python-dotenv
+pandas
