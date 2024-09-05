@@ -5,22 +5,30 @@
 2. [Gesamtarchitektur](#2-gesamtarchitektur)
    1. [Backend](#21-backend)
    2. [Data-Tier](#22-data-tier)
+   3. [Frontend](#23-frontend)
 3. [Backend](#3-backend)
    1. [Datensatzaufbereitung](#31-datensatzaufbereitung)
+      1. [Schritte der Datenaufbereitung](#311-schritte-der-datenaufbereitung)
    2. [Wetterdaten Handling](#32-wetterdaten-handling)
    3. [Suitability Score](#33-suitability-score)
+      1. [Temperatur-Eignungspunktzahl](#331-temperatur-eignungspunktzahl)
+      2. [Niederschlagseignungspunktzahl](#332-niederschlagseignungspunktzahl)
+      3. [Kombinierter Suitability Score](#333-kombinierter-suitability-score)
    4. [Datenbankhandling](#34-datenbankhandling)
    5. [REST API](#35-rest-api)
    6. [Swagger-UI und API-Dokumentation](#36-swagger-ui-und-api-dokumentation)
-   7. [Mehrwert des Backends](#37-mehrwert-des-backends)
 4. [Data-Tier](#4-data-tier)
    1. [Datenmodell (models.py)](#41-datenmodell-modelspy)
-   2. [Wetterdaten](#42-wetterdaten)
 5. [Frontend](#5-frontend)
    1. [Visualisieren der Wetterdaten](#51-visualisieren-der-wetterdaten)
    2. [Handling von LLM Prompting und Prompt Engineering](#52-handling-von-llm-prompting-und-prompt-engineering)
    3. [Begründung für LLM Handling im Frontend](#53-begründung-für-llm-handling-im-frontend)
 6. [Deployment mit Kubernetes](#6-deployment-mit-kubernetes)
+   1. [Architekturübersicht](#61-architekturübersicht)
+   2. [Komponenten](#62-komponenten)
+   3. [Kubernetes-Ressourcen](#63-kubernetes-ressourcen)
+   4. [Anpassungen der Deployment Pipeline](#64-anpassungen-der-deployment-pipeline)
+   5. [Zusammenfassung](#65-zusammenfassung)
 7. [Abdeckung der Anforderungen](#7-abdeckung-der-anforderungen)
 8. [Quellen](#8-quellen)
 
@@ -33,11 +41,14 @@ Ziel der App ist es, die Gartenplanung zu optimieren, indem eine einfache, aber 
 
 ## 2. Gesamtarchitektur
 ### 2.1 Backend
-Das Backend der Gardening App ist darauf ausgelegt, die Hauptlogik der Anwendung zu handhaben, einschließlich der Verarbeitung von Pflanzendaten und Wetterinformationen, sowie der Berechnung der Eignungsbewertung (Suitability Score). Es umfasst mehrere zentrale Komponenten, die nachfolgend erläutert werden.
+Das Backend der Gardening App ist darauf ausgelegt, die Hauptlogik der Anwendung zu handhaben, einschließlich der Verarbeitung von Pflanzendaten und Wetterinformationen sowie der Berechnung der Eignungsbewertung (Suitability Score). Es umfasst mehrere zentrale Komponenten, die nachfolgend erläutert werden.
 
 ### 2.2 Data-Tier
 Das Data-Tier speichert alle erforderlichen Daten, einschließlich Pflanzendaten und historischen Wetterinformationen, die für die Eignungsbewertung erforderlich sind. Die Daten werden in einer PostgreSQL-Datenbank verwaltet.
 
+### 2.3 Frontend
+Das Frontend benutzt die vom Backend bereitgestellte API um die Daten für die vom Nutzer gewählte Kombination aus Standort und Pflanze in ein LLM zu übergeben.
+Außerdem werden die Pflanzendaten für den Nutzer dargestellt, als Download angeboten und die Wetterdaten als Graph visualiert.
 ## 3. Backend
 ### 3.1 Datensatzaufbereitung
 
@@ -45,15 +56,14 @@ Die EcoCrop-Datenbank, die umfangreiche Informationen zu den klimatischen Anford
 
 #### 3.1.1 Schritte der Datenaufbereitung:
 
-
 1. **Erkennung und Visualisierung von fehlenden Werten**:  
    Zunächst wird eine Analyse der fehlenden oder leeren Werte in den verschiedenen Feldern durchgeführt. Dabei werden fehlende Werte (NA) und leere Strings kombiniert und die Anzahl der fehlenden Werte für jede Spalte visualisiert. Vor der Transformation sah die Verteilung der fehlenden Werte folgendermaßen aus:
 
-   ![Fehlende Werte vor der Transformation](webtechpj/backend/resources/data-report/missing_before.png)
+   ![Fehlende Werte vor der Transformation](backend/resources/data-report/missing_before.png)
 
 2. **Bereinigung von Werten**:  
    Die Bereinigung erfolgt in mehreren Schritten:
-   - **Schritt 1**: Entfernen von Einträgen, bei denen der Wert von `TOPMN` (minimale optimale Temperatur) über 40°C liegt. In diesem Schritt wurden 1 Eintrag entfernt.
+   - **Schritt 1**: Entfernen von Einträgen, bei denen der Wert von `TOPMN` (minimale optimale Temperatur) über 40°C liegt. In diesem Schritt wurde 1 Eintrag entfernt.
    - **Schritt 2**: Für Zeilen, in denen `KTMP` (Kälte-Toleranz-Temperatur) fehlt, wird dieser Wert mit `TMIN - 5°C` (5 Grad unter der minimalen Temperatur) ersetzt. Insgesamt wurden in 1410 Zeilen die fehlenden KTMP-Werte gefüllt.
    - **Schritt 3**: Prüfung und Bereinigung der Breitenkoordinaten. Für Felder mit Breitenwerten (`LATOPMN`, `LATOPMX`, `LATMN`, `LATMX`), die außerhalb des gültigen Bereichs von -90 bis 90 Grad liegen, wurden die Werte als ungültig markiert und auf NA gesetzt. Dies betraf:
      - 2 Einträge in `LATOPMN`,
@@ -70,17 +80,18 @@ Die EcoCrop-Datenbank, die umfangreiche Informationen zu den klimatischen Anford
 4. **Visualisierung der bereinigten Daten**:  
    Nach der Bereinigung wurden erneut die fehlenden Werte visualisiert, um sicherzustellen, dass keine relevanten Felder mehr unvollständige Daten enthalten.
 
-   ![Fehlende Werte nach der Transformation](webtechpj/backend/resources/data-report/missing_after.png)
+   ![Fehlende Werte nach der Transformation](backend/resources/data-report/missing_after.png)
 
 5. **Analyse der numerischen Felder**:  
    Eine weitere Analyse der Werteverteilungen der numerischen Felder wurde nach der Transformation durchgeführt. Diese Boxplot-Analyse gibt einen Überblick über die Verteilung der Temperatur- und Niederschlagsgrenzwerte (`TOPMN`, `TOPMX`, `TMIN`, `TMAX`, `ROPMN`, `ROPMX`, `RMIN`, `RMAX`, `GMIN`, `GMAX`, `KTMP`).
 
-   ![Werteverteilung nach der Transformation](webtechpj/backend/resources/data-report/distributions_after.png)
+   ![Werteverteilung nach der Transformation](backend/resources/data-report/distributions_after.png)
 
-   Eine detaillierte Zusammenfassung der durchgeführten Bereinigungen und Transformationen ist in der Datei [transformation_summary.txt](webtechpj/backend/resources/data-report/transformation_summary.txt) verfügbar.
-+++
+   Eine detaillierte Zusammenfassung der durchgeführten Bereinigungen und Transformationen ist in der Datei [transformation_summary.txt](backend/resources/data-report/transformation_summary.txt) verfügbar.
+
 ### 3.2 Wetterdaten Handling
-Das Backend ruft historische Wetterdaten von der Open Meteo API ab und verarbeitet diese, um sie in die Berechnung des Suitability Scores einfließen zu lassen.
+Das Backend ruft historische Wetterdaten der letzten 30 Tage von der Open Meteo API ab und verarbeitet diese, um sie in die Berechnung des Suitability Scores einfließen zu lassen. Die benutzte API-URL lautet: 
+`https://archive-api.open-meteo.com/v1/archive?latitude={latitude}&longitude={longitude}&start_date={start_date}&end_date={end_date}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum`
 
 ### 3.3 Suitability Score
 Der Suitability Score wird basierend auf den abgerufenen Wetterdaten und den Anforderungen der Pflanzenarten berechnet. Dabei wird eine vereinfachte Methode verwendet, um eine schnelle und dennoch aussagekräftige Bewertung zu ermöglichen.
@@ -90,7 +101,9 @@ Der Suitability Score wird basierend auf den abgerufenen Wetterdaten und den Anf
 Die Temperatur wird auf täglicher Basis in drei Parametern bewertet:
 - **Tageshöchsttemperatur (max)**: `temperature_2m_max`
 - **Tagesminimumtemperatur (min)**: `temperature_2m_min`
-- **Tagesdurchschnittstemperatur (mean)**: `temperature_2m_mean`
+- **Tagesdurchschnittstemperatur (mean)**: `
+
+temperature_2m_mean`
 
 Für jede dieser drei Temperaturen wird ein Punktwert (0–100) auf Grundlage der optimalen und maximal/minimal tolerierbaren Temperaturen der Pflanze berechnet:
 
@@ -138,13 +151,14 @@ else:
     precip_score = max(0, 100 - deviation * 10)  # Starkes Absinken bei extremen Abweichungen
 ```
 
-#### 3.3.4 **Kombinierter Suitability Score**
+#### 3.3.3 **Kombinierter Suitability Score**
 
 Der Suitability Score für jeden Tag basiert auf dem Mittelwert der Temperatur- und Niederschlagseignungen. Der endgültige Suitability Score ist der Durchschnitt der täglichen Werte über den betrachteten Zeitraum (30 Tage):
 ```python
 daily_score = (temp_score + precip_score) / 2
 final_suitability_score = sum(suitability_scores) / len(suitability_scores)
 ```
+
 ### 3.4 Datenbankhandling
 Die Anwendung überprüft die Datenbank auf vorhandene Einträge und lädt die erforderlichen Daten aus der CSV-Datei, wenn Einträge fehlen. Dies gewährleistet, dass die Datenbank stets die notwendigen Informationen für die Berechnungen enthält.
 
@@ -152,51 +166,35 @@ Die Anwendung überprüft die Datenbank auf vorhandene Einträge und lädt die e
 Die REST API des Backends stellt verschiedene Endpunkte bereit, über die das Frontend auf die Pflanzendaten, Wetterinformationen und die berechneten Suitability Scores zugreifen kann.
 
 ### 3.6 Swagger-UI und API-Dokumentation
-Die REST API des Backends ist automatisch mittels einer **Swagger-UI** dokumentiert. Diese bietet eine umfassende Übersicht über die verfügbaren API-Endpunkte sowie die dazugehörigen Request- und Response-Formate. Entwickler und Nutzer können die API-Endpunkte direkt in der Benutzeroberfläche testen, was die Integration und das Verständnis der API erleichtert.
-
-Die Swagger-Dokumentation kann unter folgendem Link aufgerufen werden:  
+Die REST API des Backends ist automatisch mittels einer **Swagger-UI** dokumentiert. Die Swagger-Dokumentation kann unter folgendem Link aufgerufen werden:  
 [Swagger Dokumentation der Gardening API](https://plantsapi-13434.edu.k8s.th-luebeck.dev/docs)
-
-### 3.7 Mehrwert des Backends
-Das Backend der Gardening App spielt eine zentrale Rolle bei der Bereitstellung der Kernfunktionalitäten der Anwendung und stellt damit einen wesentlichen Mehrwert für die App dar. Zu den wichtigsten Mehrwerten des Backends gehören:
-
-1. **Verarbeitung großer Datensätze**:  
-   Das Backend verarbeitet die umfangreichen Pflanzendaten der EcoCrop-Datenbank und speichert diese in einer PostgreSQL-Datenbank. Diese Pflanzendaten werden für die Berechnung der optimalen Anbaubedingungen verwendet.
-
-2. **Integration externer Datenquellen**:  
-   Durch die Integration von Wetterdaten (über die Open Meteo API) ermöglicht das Backend die Echtzeitberechnung der optimalen Pflanzbedingungen, die auf den aktuellen klimatischen Gegebenheiten basieren.
-
-3. **Berechnung des Suitability Scores**:  
-   Das Backend berechnet basierend auf den Pflanzendaten und den historischen Wetterdaten einen **Suitability Score**, der anzeigt, wie gut die aktuellen Bedingungen für das Wachstum einer bestimmten Pflanze sind. Diese Berechnung erfolgt in Echtzeit und wird über die API dem Frontend zur Verfügung gestellt.
-
-4. **Bereitstellung der API-Endpunkte**:  
-   Über die **REST API** des Backends können Entwickler und das Frontend einfach auf die Pflanzendaten und die Suitability Score-Berechnungen zugreifen. Dies ermöglicht eine flexible und dynamische Nutzung der Daten und Berechnungen, ohne dass das Frontend selbst die Datenverarbeitung übernehmen muss.
-
-5. **Automatisierte Dokumentation**:  
-   Dank der in FastAPI integrierten Swagger-UI ist die API automatisch dokumentiert, was die Nutzung und Integration der API für Entwickler vereinfacht. So wird sichergestellt, dass alle verfügbaren Endpunkte und ihre Funktionalitäten transparent und verständlich dargestellt sind.
-
-6. **Skalierbarkeit und Erweiterbarkeit**:  
-   Durch die Implementierung als REST API kann das Backend einfach skaliert und bei Bedarf erweitert werden, um zusätzliche Funktionalitäten oder Datenquellen zu integrieren. Diese Flexibilität ist besonders wichtig, um das System an neue Anforderungen anzupassen.
-
-### 3.8 Zusammenfassung
-Das Backend der Gardening App bietet einen erheblichen Mehrwert, da es die Kernlogik der Anwendung übernimmt, externe Daten integriert und den Suitability Score in Echtzeit berechnet. Ohne das Backend wäre die Gardening App nicht in der Lage, die benötigten Daten zu verarbeiten oder den Nutzern präzise Empfehlungen für den Pflanzenanbau zu geben. Durch die automatische Dokumentation der API über Swagger und die Bereitstellung über Kubernetes ist das Backend sowohl für Entwickler als auch für die Endnutzer optimal zugänglich und nutzbar.
 
 ## 4. Data-Tier
 ### 4.1 Datenmodell (models.py)
-Das Datenmodell der App basiert auf SQLAlchemy und definiert die Struktur der in der PostgreSQL-Datenbank gespeicherten Pflanzendaten.
-
-### 4.2 Wetterdaten
-Die Wetterdaten werden von der Open Meteo API bezogen und in der Datenbank gespeichert, um sie für die Berechnung der Suitability Scores verfügbar zu machen.
+Das Datenmodell der App basiert auf SQLAlchemy und repräsentiert in einer einzigen Tabelle die ecocrop Datenbank mit unveränderten Datentypen.
 
 ## 5. Frontend
 ### 5.1 Visualisieren der Wetterdaten
-Das Frontend visualisiert die historischen Wetterdaten der letzten 30 Tage in einem anschaulichen Diagramm, um den Benutzern ein besseres Verständnis der klimatischen Bedingungen zu ermöglichen.
+Das Frontend visualisiert die historischen Wetterdaten der letzten 30 Tage in einem anschaulichen Diagramm, um den Benutzern ein besseres Verständnis der klimatischen Bedingungen zu ermöglichen. Das Diagramm hat eine doppelte Beschriftung der y-Achse für Niederschlag und Temperatur. Die X-Achse zeigt die Zeitspanne der 30 Tage.
 
 ### 5.2 Handling von LLM Prompting und Prompt Engineering
-Die App nutzt LLMs zur Erstellung benutzerfreundlicher und personalisierter Berichte. Dies erfolgt durch Prompt Engineering, das sicherstellt, dass die Ausgaben der LLMs den Anforderungen der Benutzer entsprechen.
 
-### 5.3 Begründung für LLM Handling im Frontend
-Das Handling der LLMs im Frontend ermöglicht eine unmittelbare Interaktion mit den Benutzern und eine dynamische Anpassung der Ausgaben, was zu einer verbesserten Nutzererfahrung führt.
+In der Gardening App wird ein **Large Language Model (LLM)** verwendet, um personalisierte und benutzerfreundliche Berichte zu generieren, die den Nutzern wertvolle Einblicke in die Anbaubedingungen für ihre Pflanzen geben. Dies geschieht durch ein **Prompt Engineering**, bei dem sorgfältig gestaltete Vorlagen verwendet werden, um die Ausgaben des Modells auf die spezifischen Anforderungen der Benutzer abzustimmen. 
+
+#### Verwendetes LLM:
+| Name     | Endpunkt-URL                                            | LLM         | Bleibt bis min.    |
+|----------|----------------------------------------------------------|-------------|-------------------|
+| Chat LTS | [https://chat-lts.models.th-luebeck.dev](https://chat-lts.models.th-luebeck.dev) | Llama 3 8B   | 28.2.2025          |
+
+Das Modell wird über einen speziell entwickelten **Prompt Template** angesteuert, das sicherstellt, dass die Antworten in einer leicht verständlichen, interaktiven und oft humorvollen Art und Weise präsentiert werden, um die Benutzererfahrung zu verbessern. 
+
+#### Prompt Struktur:
+Der Prompt ist so gestaltet, dass er die relevanten Wetterdaten, Pflanzeninformationen und den Suitability Score auf kreative und informative Weise integriert. Der gartenkundige "Gartenzwerg" antwortet den Nutzern mit hilfreichen Tipps, indem er sowohl die klimatischen Bedingungen als auch die geografische Lage in die Analyse einbezieht.
+
+Die App verwendet dabei das LLM, um die Wetterdaten der letzten 30 Tage sowie den berechneten **Suitability Score** zu analysieren und diese Daten in leicht verständlichen Berichten zusammenzufassen. Hierbei werden die optimalen und minimal/maximal tolerierbaren Bedingungen der Pflanze berücksichtigt, um eine fundierte Auswertung der aktuellen Wachstumsbedingungen zu liefern. 
+
+#### Integration im Frontend:
+Das Frontend der App ruft das LLM auf, sobald der Benutzer eine Pflanze und eine Lokalisation ausgewählt und mit Klick auf den Button "Calculate Suitability" bestätigt hat. Hierbei werden die Wetterdaten und der Suitability Score an das LLM gesendet, das daraufhin einen vollständigen Bericht erstellt. Dieser wird manuell abgekürzt, da am Ende meist Artefakte/Kauderwelsch auftreten, bspw. Python Code.
 
 ## 6. Deployment mit Kubernetes
 
@@ -213,13 +211,15 @@ Das folgende Diagramm zeigt die Gesamtarchitektur der App in der Kubernetes-Umge
 ### 6.2 Komponenten
 
 1. **Frontend**:  
-   Das Frontend basiert auf Streamlit und stellt die Benutzeroberfläche bereit, über die der Endnutzer interagiert. Es empfängt Benutzeranfragen über einen Webbrowser, visualisiert Daten und kommuniziert mit dem Backend, sowie dem LLM Endpunkt über API-Calls. Das Frontend wird über einen Kubernetes-Service bereitgestellt und ist durch einen Ingress-Controller von außen zugänglich. Die Ingress-Rules leiten die HTTP-Anfragen an den entsprechenden Service im Cluster weiter.
+   Das Frontend basiert auf Streamlit und stellt die Benutzeroberfläche bereit, über die der Endnutzer interagiert. Es empfängt Benutzeranfragen über einen Webbrowser, visualisiert Daten und kommuniziert mit dem Backend, sowie dem LLM-Endpunkt über API-Calls. Das Frontend wird über einen Kubernetes-Service bereitgestellt und ist durch einen Ingress-Controller von außen zugänglich. Die Ingress-Rules leiten die HTTP-Anfragen an den entsprechenden Service im Cluster weiter.
 
 2. **Backend (API/Business-Logic)**:  
    Das Backend der Gardening App ist verantwortlich für die Hauptlogik der Anwendung, einschließlich der Verarbeitung von Pflanzendaten, dem Abruf von Wetterdaten und der Berechnung der Suitability Scores. Es kommuniziert mit dem PostgreSQL-Data-Tier, um Pflanzendaten zu speichern und abzurufen, und stellt API-Endpunkte für das Frontend bereit. Auch das Backend wird über einen Kubernetes-Service bereitgestellt und über einen eigenen Ingress von außen erreichbar gemacht.
 
 3. **Data-Tier (PostgreSQL)**:  
-   Das PostgreSQL-Datenbanksystem dient als persistent Speicher für alle relevanten Pflanzendaten. Diese Komponente ist nicht öffentlich zugänglich und kommuniziert nur mit dem Backend innerhalb des Clusters. Der Datenbestand wird durch ein Persistent Volume (PVC) gesichert, sodass die Daten auch nach einem Neustart des Pods erhalten bleiben.
+   Das PostgreSQL-Datenbanksystem dient als persistent Speicher für alle relevanten Pflanzendaten. Diese Komponente ist nicht öffentlich zugänglich und kommuniziert
+
+ nur mit dem Backend innerhalb des Clusters. Der Datenbestand wird durch ein Persistent Volume (PVC) gesichert, sodass die Daten auch nach einem Neustart des Pods erhalten bleiben.
 
 ### 6.3 Kubernetes-Ressourcen
 
@@ -267,5 +267,5 @@ Durch den Einsatz von Kubernetes in Kombination mit einer kontinuierlichen Deplo
 | AF-8: Dokumentation                                                    | Umfassende README.md und GitLab Wiki                                                                                                                                                                                                                          | Vollständige Dokumentation der Architektur und Funktionen der App.                                                                                                     |
 
 ## 8. Quellen
-- [EcoCrop Readme](https://github.com/OpenCLIM/ecocrop)+
-- [Lab 06: Orchestration Lab-k8s] (https://git.mylab.th-luebeck.de/cloud-native/lab-k8s)+
+- [EcoCrop Readme](https://github.com/OpenCLIM/ecocrop)
+- [Lab 06: Orchestration Lab-k8s](https://git.mylab.th-luebeck.de/cloud-native/lab-k8s)

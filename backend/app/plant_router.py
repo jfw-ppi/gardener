@@ -155,7 +155,7 @@ def get_plant_router() -> APIRouter:
         for key, value in updated_plant.dict().items():
             setattr(plant, key, value)
 
-        await session.commit()  # Changes are automatically detected and persisted
+        await session.commit()
         await session.refresh(plant)
         return plant
 
