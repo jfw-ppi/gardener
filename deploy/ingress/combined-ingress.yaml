@@ -32,5 +32,5 @@ spec:
   tls:
   - secretName: gardener-ingress-cert
     hosts:
-      - "Gardener-{{ CI_PROJECT_ID }}.edu.k8s.th-luebeck.dev"
-      - "plantsAPI-{{ CI_PROJECT_ID }}.edu.k8s.th-luebeck.dev"
+      - "gardener-{{ CI_PROJECT_ID }}.edu.k8s.th-luebeck.dev"
+      - "plantsapi-{{ CI_PROJECT_ID }}.edu.k8s.th-luebeck.dev"

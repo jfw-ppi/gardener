@@ -67,7 +67,7 @@ terminate:
     when: manual
     script:
         - kubectl delete -f deploy/persistent-postgres || true
-        - mo deploy/frontend/combined-ingress.yaml | kubectl delete -f - || true
+        - mo deploy/ingress/combined-ingress.yaml | kubectl delete -f - || true
         - mo deploy/frontend/frontend-service.yaml | kubectl delete -f - || true
         - mo deploy/frontend/frontend-deployment.yaml | kubectl delete -f - || true
         - mo deploy/backend/backend-service.yaml | kubectl delete -f - || true
