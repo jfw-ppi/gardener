@@ -32,16 +32,17 @@
 8. [Quellen](#8-quellen)
 
 ## 1. Motivation und Zweck der Gardener App
-Die Gardener App wurde entwickelt, um Hobbygärtnern eine einfache und effektive Möglichkeit zu bieten, den optimalen Aussaatzeitpunkt für verschiedene Pflanzenarten basierend auf eigenen Wetterdaten zu bestimmen. Die App führt dabei eine grobe, aber dennoch zuverlässige Analyse durch, die es den Benutzern ermöglicht, fundierte Entscheidungen für ihre Gartenplanung zu treffen.
+Die Gardener App wurde entwickelt, um Hobbygärtnern eine einfache und effektive Möglichkeit zu bieten, die aktuellen Anbaubedingungen im Freien für verschiedene Pflanzenarten, basierend auf Standort spezifischen Wetterdaten, zu bestimmen. Die App führt dabei eine grobe, aber dennoch zuverlässige Analyse durch, die es den Benutzern ermöglicht, fundierte Entscheidungen für ihre Gartenplanung zu treffen.
 
-Ein besonderer Vorteil der App liegt in der Nutzung der EcoCrop-Datenbank, die von der UN entwickelt wurde und eine umfassende Sammlung klimatischer Anforderungen für eine Vielzahl von Pflanzenarten enthält. Die Komplexität des vollständigen EcoCrop-Modells übersteigt jedoch die Anforderungen vieler Benutzer und ist aufgrund fehlender, exakt passender Daten für das Modell oft nicht anwendbar. Daher wurde die Berechnung der Suitability Scores vereinfacht, um eine benutzerfreundliche und dennoch informative Lösung zu bieten, die speziell auf die Bedürfnisse von Hobbygärtnern zugeschnitten ist.
+Ein besonderer Vorteil der App liegt in der Nutzung der EcoCrop-Datenbank, die von der UN entwickelt wurde und eine umfassende Sammlung klimatischer Anforderungen für eine Vielzahl von Pflanzenarten enthält. Die Komplexität des vollständigen EcoCrop-Modells übersteigt jedoch die Anforderungen vieler Benutzer und ist aufgrund fehlender, passender Daten für das Modell nicht anwendbar.
+Daher wurde die Berechnung der Suitability Scores vereinfacht, um eine benutzerfreundliche und dennoch informative Lösung zu bieten, die speziell auf die Bedürfnisse von Hobbygärtnern zugeschnitten ist.
 
-Ziel der App ist es, die Gartenplanung zu optimieren, indem eine einfache, aber effektive Analyse der klimatischen Bedingungen und deren Einfluss auf das Pflanzenwachstum ermöglicht wird.
+Ziel der App ist es, die Gartenplanung zu optimieren, indem eine einfache, aber effektive Analyse der klimatischen Bedingungen und deren Einfluss auf das Pflanzenwachstum ermöglicht wird. Außerdem soll dazu angeregt werden neue Pflanzenarten kennezulernen, sowie deren wissenschaflichen Namen zu lernen, da diese der einzige eindeutige Bezeichner sind. 
 
 ## 2. Gesamtarchitektur
 ### 2.1 Backend
 Erreichbar unter: https://plantsapi-13434.edu.k8s.th-luebeck.dev/
-Das Backend der Gardening App ist darauf ausgelegt, die Hauptlogik der Anwendung zu handhaben, einschließlich der Verarbeitung von Pflanzendaten und Wetterinformationen sowie der Berechnung der Eignungsbewertung (Suitability Score). Es umfasst mehrere zentrale Komponenten, die nachfolgend erläutert werden.
+Das Backend der Gardening App ist darauf ausgelegt, die Hauptlogik der Anwendung zu handhaben, einschließlich der Verarbeitung von Pflanzendaten und Wetterinformationen sowie der Berechnung der Eignungsbewertung (Suitability Score).
 
 ### 2.2 Data-Tier
 Das Data-Tier speichert alle erforderlichen Daten, einschließlich Pflanzendaten und historischen Wetterinformationen, die für die Eignungsbewertung erforderlich sind. Die Daten werden in einer PostgreSQL-Datenbank verwaltet.
