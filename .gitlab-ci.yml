@@ -36,6 +36,7 @@ deploy-backend:
         - mo deploy/backend/backend-service.yaml | kubectl apply -f -
         - mo deploy/backend/backend-deployment.yaml | kubectl delete -f - || true
         - mo deploy/backend/backend-deployment.yaml | kubectl apply -f -
+        - mo deploy/backend/backend-ingress.yaml | kubectl apply -f -
 
 build-frontend:
     stage: build
@@ -70,4 +71,5 @@ terminate:
         - mo deploy/frontend/frontend-deployment.yaml | kubectl delete -f - || true
         - mo deploy/backend/backend-service.yaml | kubectl delete -f - || true
         - mo deploy/backend/backend-deployment.yaml | kubectl delete -f - || true
+        - mo deploy/backend/backend-ingress.yaml | kubectl delete -f - || true
         - kubectl delete -f deploy/storage || true

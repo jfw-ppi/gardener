@@ -118,11 +118,25 @@ if st.button("🌟 Calculate Suitability 🌟", disabled=not location):
                     weather_data = suitability_data['weather_data']
                     st.subheader("📊 Weather Data (Past 30 Days):")
 
-                    fig, ax = plt.subplots()
-                    ax.plot(weather_data['temperature_2m_mean'], label='Temperature (°C)', color='orange', marker='o')
-                    ax.bar(range(len(weather_data['precipitation_sum'])), weather_data['precipitation_sum'], alpha=0.5,
-                           label='Precipitation (mm)', color='blue')
-                    plt.legend()
+                    fig, ax1 = plt.subplots()
+
+                    # Plot temperature data on the first axis (ax1)
+                    ax1.plot(weather_data['temperature_2m_mean'], label='Temperature (°C)', color='orange', marker='o')
+                    ax1.set_xlabel('Days')
+                    ax1.set_ylabel('Temperature (°C)', color='orange')
+                    ax1.tick_params(axis='y', labelcolor='orange')
+
+                    # Create a second y-axis (ax2) sharing the same x-axis
+                    ax2 = ax1.twinx()
+                    ax2.bar(range(len(weather_data['precipitation_sum'])), weather_data['precipitation_sum'], alpha=0.5,
+                            label='Precipitation (mm)', color='blue')
+                    ax2.set_ylabel('Precipitation (mm)', color='blue')
+                    ax2.tick_params(axis='y', labelcolor='blue')
+
+                    # Add legends for both temperature and precipitation
+                    fig.legend(loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes)
+
+                    # Display the plot in Streamlit
                     st.pyplot(fig)
 
                     # Inform the user about the weather data interval
@@ -169,7 +183,8 @@ if st.button("🌟 Calculate Suitability 🌟", disabled=not location):
                     clean_text = clean_text.replace("</s>", "").strip()  # Remove '</s>' if it appears
 
                     st.write("📜 Analysis Report:")
-                    st.write(clean_text)
+                    st.write(generated_text)
+
                 else:
                     st.error("🚨 Failed to fetch suitability data. Please try again.")
             else:
