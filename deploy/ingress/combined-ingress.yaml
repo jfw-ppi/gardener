@@ -1,14 +1,14 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: frontend-ingress  # Keep the name as frontend-ingress
+  name: combined-ingress
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt"
     acme.cert-manager.io/http01-edit-in-place: "true"
 spec:
   rules:
   # Frontend Ingress Rule
-  - host: "Gardener-{{ CI_PROJECT_ID }}.edu.k8s.th-luebeck.dev"
+  - host: "gardener-{{ CI_PROJECT_ID }}.edu.k8s.th-luebeck.dev"
     http:
       paths:
       - pathType: Prefix
@@ -19,7 +19,7 @@ spec:
             port:
               number: 80
   # Backend Ingress Rule
-  - host: "plantsAPI-{{ CI_PROJECT_ID }}.edu.k8s.th-luebeck.dev"
+  - host: "plantsapi-{{ CI_PROJECT_ID }}.edu.k8s.th-luebeck.dev"
     http:
       paths:
       - pathType: Prefix
