@@ -1,8 +1,9 @@
 import math
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import Response
 
 from .database import get_async_session
 from .models import Plant, PlantModel, PlantSuitabilityResponse
@@ -157,5 +158,50 @@ def get_plant_router() -> APIRouter:
         await session.commit()  # Changes are automatically detected and persisted
         await session.refresh(plant)
         return plant
+
+    @router.post("/", response_model=PlantModel)
+    async def create_plant(new_plant: PlantModel, session: AsyncSession = Depends(get_async_session)):
+        """
+        Create a new plant entry in the database.
+
+        :param new_plant: The details of the plant to create.
+        :param session: Database session dependency.
+        :return: The created Plant object.
+        """
+        # Check if plant with same ScientificName already exists
+        query = select(Plant).where(Plant.ScientificName.ilike(new_plant.ScientificName))
+        result = await session.execute(query)
+        existing_plant = result.scalars().first()
+
+        if existing_plant:
+            raise HTTPException(status_code=400, detail="Plant with this scientific name already exists.")
+
+        # Create the new plant record
+        plant = Plant(**new_plant.dict())
+        session.add(plant)
+        await session.commit()
+        await session.refresh(plant)
+        return plant
+
+    @router.delete("/{eco_port_code}")
+    async def delete_plant(eco_port_code: int, session: AsyncSession = Depends(get_async_session)):
+        """
+        Delete a plant by its EcoPortCode from the database.
+
+        :param eco_port_code: The unique EcoPortCode of the plant to delete.
+        :param session: Database session dependency.
+        :return: A success message after deletion.
+        """
+        # Find the plant by EcoPortCode
+        query = select(Plant).where(Plant.EcoPortCode == eco_port_code)
+        result = await session.execute(query)
+        plant = result.scalars().first()
+
+        if not plant:
+            raise HTTPException(status_code=404, detail="Plant not found.")
+
+        await session.delete(plant)
+        await session.commit()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     return router
