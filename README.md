@@ -158,16 +158,16 @@ Die App wird im Rahmen einer Continuous Deployment Pipeline bereitgestellt, die 
 Durch den Einsatz von Kubernetes in Kombination mit einer kontinuierlichen Deployment-Pipeline wird sichergestellt, dass die Gardening App jederzeit skalierbar, hochverfügbar und robust bereitgestellt werden kann. Die Architektur ermöglicht eine klare Trennung der Verantwortlichkeiten zwischen dem Frontend, Backend und Data-Tier, wobei die Kommunikation über Kubernetes-Services und Ingress-Routen gesteuert wird.
 
 ## 7. Abdeckung der Anforderungen
-| Anforderung | Umsetzung | Begründung |
-|-------------|-----------|------------|
-| AF-1: DevOps / Continuous Deployment | Kubernetes Deployment | Skalierbares und automatisiertes Deployment durch Kubernetes. |
-| AF-2: Balance zwischen technischer Komplexität und Nutzungsfreude | Vereinfachte Suitability Score Berechnung | Benutzerfreundliche Lösung, die komplexe Berechnungen vermeidet und dennoch hilfreiche Ergebnisse liefert. |
-| AF-3: WebUI == Streamlit | Nutzung von Streamlit | Streamlit bietet eine einfache Möglichkeit, interaktive WebUIs zu erstellen. |
-| AF-4: LLMs und Backend-Services | LLM-Nutzung im Frontend | Direkte Interaktion mit den Benutzern, um personalisierte Berichte zu erstellen. |
-| AF-5: Intuitive Bedienbarkeit | Einfaches, klares UI | Die App ist intuitiv und ohne lange Einarbeitungszeit bedienbar. |
-| AF-6: Stateful Backend (Optional) | Verwendung von PostgreSQL | Speicherung der relevanten Pflanzendaten in einer PostgreSQL-Datenbank. |
-| AF-7: Wiederverwenden von Grafiken oder anderen gestaltenden Elementen | Nutzung von CC-lizenzierten Bildern | Einhaltung von Lizenzanforderungen bei der Nutzung von Grafiken. |
-| AF-8: Dokumentation | Umfassende README.md und GitLab Wiki | Vollständige Dokumentation der Architektur und Funktionen der App. |
+| Anforderung | Umsetzung                                                                                                                                                                                                                                                    | Begründung |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| AF-1: DevOps / Continuous Deployment | Kubernetes Deployment                                                                                                                                                                                                                                        | Skalierbares und automatisiertes Deployment durch Kubernetes. |
+| AF-2: Balance zwischen technischer Komplexität und Nutzungsfreude | Minimale Anzahl an Bedienelementen, keine Notwendigkeit für den Nutzer sich mit Berechnung des Suitability Score auseinanderzusetzen, graphische Untermalung der Wetterdaten, Prompt Engineering für für Laien verständlichen freundlich-witzigen Assistenten|
+| AF-3: WebUI == Streamlit | Nutzung von Streamlit                                                                                                                                                                                                                                        | Streamlit bietet eine einfache Möglichkeit, interaktive WebUIs zu erstellen. |
+| AF-4: LLMs und Backend-Services | LLM-Nutzung im Frontend                                                                                                                                                                                                                                      | Direkte Interaktion mit den Benutzern, um personalisierte Berichte zu erstellen. |
+| AF-5: Intuitive Bedienbarkeit | Einfaches, klares UI                                                                                                                                                                                                                                         | Die App ist intuitiv und ohne lange Einarbeitungszeit bedienbar. |
+| AF-6: Stateful Backend (Optional) | Verwendung von PostgreSQL                                                                                                                                                                                                                                    | Speicherung der relevanten Pflanzendaten in einer PostgreSQL-Datenbank. |
+| AF-7: Wiederverwenden von Grafiken oder anderen gestaltenden Elementen | Nutzung von CC-lizenzierten Bildern                                                                                                                                                                                                                          | Einhaltung von Lizenzanforderungen bei der Nutzung von Grafiken. |
+| AF-8: Dokumentation | Umfassende README.md und GitLab Wiki                                                                                                                                                                                                                         | Vollständige Dokumentation der Architektur und Funktionen der App. |
 
 ## 8. Quellen
 - [EcoCrop Readme](https://github.com/OpenCLIM/ecocrop)
