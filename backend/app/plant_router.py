@@ -32,11 +32,30 @@ def get_plant_router() -> APIRouter:
     @router.get("/", response_model=list[PlantModel])
     async def get_all_plants(session: AsyncSession = Depends(get_async_session)):
         """
-        Retrieve all plants from the database.
+            Retrieve all plants from the database.
 
-        :param session: Database session dependency.
-        :return: A list of Plant objects with NaN values replaced by None.
-        """
+            This endpoint retrieves all plant records from the database. If no plants are found,
+            a 404 error is returned.
+
+            ### Parameters:
+
+            ### Responses:
+            - **200 OK**: A list of all plant objects.
+            - **404 Not Found**: If no plants are found in the database.
+
+            ### Example Response:
+            ```
+            [
+                {
+                    "EcoPortCode": 123,
+                    "ScientificName": "Rosa",
+                    "TOPMN": 10.0,
+                    "TOPMX": 25.0,
+                    ...
+                }
+            ]
+            ```
+            """
         result = await session.execute(select(Plant))
         plants = result.scalars().all()
         if not plants:
