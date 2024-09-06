@@ -40,7 +40,7 @@ def transform_ecocrop_data():
     summary_file_path = os.path.join(data_report_path, "transformation_summary.txt")
     with open(summary_file_path, "w") as summary_file:
 
-        # Perform initial visualizations
+        # Perform PRE transformation visualizations
         visualize_missing_values(ecocrop_df,
                                  "Missing Values (NA or Empty String) Across Columns - Before Transformation",
                                  os.path.join(data_report_path, "missing_before.png"))
@@ -105,7 +105,7 @@ def transform_ecocrop_data():
                                  "Missing Values (NA or Empty String) Across Columns - After Transformation",
                                  os.path.join(data_report_path, f"missing_after{suffix}.png"))
 
-        # Further analysis (example: value distributions)
+        # POST analysis for value distributions
         plt.figure(figsize=(15, 7))
         sns.boxplot(data=cleaned_ecocrop_df[numerical_fields], palette="viridis")
         plt.title("Value Distributions Across Suitability Score Fields - After Transformation")
