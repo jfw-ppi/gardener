@@ -33,6 +33,8 @@
 
 ## 1. Motivation und Zweck der Gardener App
 Die Motivation der Gardener App liegt zum einen im Eigeninteresse verschiedene Gartenpflanzen anzubauen, zum Anderen in der Inspiration durch den Einsatz von AI basierten Tools in der Landwirtschaft. Es gibt beispielsweise von Microsoft eine Lösung die indischen Farmern Tipps für u.a. Aussähzeitpunkt, Wahl des Cultivars, Düngung bietet.
+
+
 ![AI-based agriculture advisor](AI-based_agriculture_advisor.png)
 
 
