@@ -34,6 +34,8 @@
 ## 1. Motivation und Zweck der Gardener App
 Die Motivation der Gardener App liegt zum einen im Eigeninteresse verschiedene Gartenpflanzen anzubauen, zum Anderen in der Inspiration durch den Einsatz von AI basierten Tools in der Landwirtschaft. Es gibt beispielsweise von Microsoft eine Lösung die indischen Farmern Tipps für u.a. Aussähzeitpunkt, Wahl des Cultivars, Düngung bietet.
 ![AI-based agriculture advisor](AI-based_agriculture_advisor.png)
+
+
 Auf dem obigen Foto eines einfachen Handys, das die Anbautipps per SMS empfängt, ist die [Anwendung von Microsoft](https://news.microsoft.com/en-in/features/ai-agriculture-icrisat-upl-india/) in der Praxis zu sehen. 
 Die Einfachheit der Anwendung mit einem gleichzeitig sehr komplexen Backend war die initiale Motivation für die Gardenener App. Es soll somit ein ähnliches Ziel, nämlich die datenbasierte Pflanzenzucht für technisch, fachlich ungeschulte Benutzer unter vereinfachten Bedingungen erreicht werden.
 Die Hauptsäule der App liegt in der Nutzung der EcoCrop-Datenbank, die von der UN entwickelt wurde und eine umfassende Sammlung klimatischer Anforderungen für eine Vielzahl von Pflanzenarten enthält. Die Komplexität des vollständigen EcoCrop-Modells ist jedoch zu hoch und die Datenbank möglicherweise u.a. deswegen nicht mehr in Benutzung. Das ist schade, da es sich immer noch um einen der besten frei zugänglichen Datensätze mit Pflanzenbedürfnissen handelt. Es ist sogar der einzige frei verfügbare, passende Datensatz der bei der Recherche zum Projekt gefunden wurrde.
