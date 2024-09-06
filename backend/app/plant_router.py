@@ -27,14 +27,7 @@ def _replace_nan_with_none(plant):
 
 
 def get_plant_router() -> APIRouter:
-    """
-    Create and return an APIRouter for plant-related endpoints.
 
-    This router includes endpoints for retrieving all plants, searching by scientific name,
-    searching by common name and the calculation of suitability score
-
-    :return: An APIRouter with the plant-related routes.
-    """
     router = APIRouter()
 
     @router.get("/", response_model=list[PlantModel])
