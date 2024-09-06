@@ -27,7 +27,6 @@ def _replace_nan_with_none(plant):
 
 
 def get_plant_router() -> APIRouter:
-
     router = APIRouter()
 
     @router.get("/", response_model=list[PlantModel])
@@ -51,12 +50,33 @@ def get_plant_router() -> APIRouter:
         """
         Retrieve plants by their scientific name.
 
-        The scientific name is matched case-insensitively. If the name is found,
-        all matching plants are returned.
+        This endpoint retrieves plants that match the provided scientific name (case-insensitive).
+        If no plant is found, a 404 error is returned.
 
-        :param scientific_name: The scientific name of the plant to search for.
-        :param db: Database session dependency.
-        :return: A list of Plant objects matching the scientific name.
+        ### Parameters:
+        - **scientific_name** (str): The scientific name of the plant to search for.
+
+        ### Responses:
+        - **200 OK**: A list of plant objects matching the scientific name.
+        - **404 Not Found**: If no matching plant is found.
+
+        ### Example Request:
+        ```
+        GET /scientific_name/Rosa
+        ```
+
+        ### Example Response:
+        ```
+        [
+            {
+                "EcoPortCode": 123,
+                "ScientificName": "Rosa",
+                "TOPMN": 10.0,
+                "TOPMX": 25.0,
+                ...
+            }
+        ]
+        ```
         """
         scientific_name = scientific_name.strip()
         query = select(Plant).where(Plant.ScientificName.ilike(scientific_name))
@@ -73,12 +93,31 @@ def get_plant_router() -> APIRouter:
         """
         Retrieve plants by their common name.
 
-        The common name is searched case-insensitively and as a substring.
-        If the common name is found within any part of the COMNAME field, all matching plants are returned.
+        This endpoint performs a case-insensitive search on the common name (COMNAME field).
+        If no plant is found, a 404 error is returned.
 
-        :param common_name: The common name to search for.
-        :param db: Database session dependency.
-        :return: A list of Plant objects matching the common name.
+        ### Parameters:
+        - **common_name** (str): The common name to search for.
+
+        ### Responses:
+        - **200 OK**: A list of plant objects matching the common name.
+        - **404 Not Found**: If no matching plant is found.
+
+        ### Example Request:
+        ```
+        GET /common_name/Rose
+        ```
+
+        ### Example Response:
+        ```
+        [
+            {
+                "EcoPortCode": 123,
+                "ScientificName": "Rosa",
+                ...
+            }
+        ]
+        ```
         """
         common_name = common_name.strip()
         query = select(Plant).where(Plant.COMNAME.ilike(f"%{common_name}%"))
@@ -95,12 +134,31 @@ def get_plant_router() -> APIRouter:
         """
         Search plants by a general query.
 
-        The query is searched case-insensitively in both the ScientificName and SYNO (Synonyms) fields.
-        If a match is found, all matching plants are returned.
+        This endpoint performs a case-insensitive search in the ScientificName and SYNO (synonyms) fields.
+        If no plant is found, a 404 error is returned.
 
-        :param query: The search query to match against the ScientificName and SYNO fields.
-        :param db: Database session dependency.
-        :return: A list of Plant objects matching the search query.
+        ### Parameters:
+        - **query** (str): The search query to match against the ScientificName and SYNO fields.
+
+        ### Responses:
+        - **200 OK**: A list of plant objects matching the search query.
+        - **404 Not Found**: If no matching plant is found.
+
+        ### Example Request:
+        ```
+        GET /search/Rosa
+        ```
+
+        ### Example Response:
+        ```
+        [
+            {
+                "EcoPortCode": 123,
+                "ScientificName": "Rosa",
+                ...
+            }
+        ]
+        ```
         """
         query = query.strip()
         query_stmt = select(Plant).where(
@@ -120,6 +178,47 @@ def get_plant_router() -> APIRouter:
             location: str,
             session: AsyncSession = Depends(get_async_session)
     ):
+        """
+            Calculate the suitability of a plant for a specific location based on weather data.
+
+            This endpoint retrieves plant information based on the scientific name provided,
+            fetches historical weather data for the specified location, and calculates a
+            suitability score. The suitability score is determined using predefined optimal
+            climate ranges for the plant species, along with real-time weather conditions.
+
+            ### Parameters:
+            - **scientific_name** (str): The scientific name of the plant (case-insensitive).
+            - **location** (str): The location for which the suitability score should be calculated.
+
+            ### Responses:
+            - **200 OK**: Returns a `PlantSuitabilityResponse` model with the calculated suitability score,
+              weather data, and plant-specific climate requirements.
+            - **404 Not Found**: If the plant with the given scientific name is not found.
+
+            ### Example Request:
+            ```
+            GET /suitability/rosa?location=Berlin
+            ```
+
+            ### Example Response:
+            ```
+            {
+                "scientific_name": "Rosa",
+                "suitability_score": 75,
+                "weather_data": {
+                    "temperature": [16, 18, 19],
+                    "precipitation": [10, 12, 8]
+                },
+                "optimal_conditions": {
+                    "temperature": {"min": 15, "max": 25},
+                    "precipitation": {"min": 5, "max": 20}
+                }
+            }
+            ```
+
+            ### Raises:
+            - `HTTPException`: If the plant is not found (404) or if there are issues fetching weather data.
+            """
         query = select(Plant).where(Plant.ScientificName.ilike(scientific_name.strip()))
         result = await session.execute(query)
         plant = result.scalars().first()
@@ -138,6 +237,64 @@ def get_plant_router() -> APIRouter:
     @router.put("/", response_model=PlantModel)
     async def update_plant(updated_plant: PlantModel,
                            session: AsyncSession = Depends(get_async_session)):
+        """
+                  Update the details of an existing plant.
+
+                  This endpoint allows for the modification of an existing plant's information in the database.
+                  It takes an updated plant model, searches for the plant by its scientific name, and updates
+                  its details with the provided data. If the plant is not found, an error is returned.
+
+                  ### Parameters:
+                  - **updated_plant** (PlantModel): The updated plant data containing all fields to modify.
+
+                  ### Responses:
+                  - **200 OK**: Returns the updated plant record with all fields, including the unchanged ones.
+                  - **404 Not Found**: If no plant with the given scientific name is found in the database.
+
+                  ### Example Request:
+                  ```
+                  PUT /
+                  {
+                      "EcoPortCode": 123,
+                      "ScientificName": "Rosa",
+                      "TOPMN": 10.0,
+                      "TOPMX": 25.0,
+                      "TMIN": 5.0,
+                      "TMAX": 35.0,
+                      "ROPMN": 300.0,
+                      "ROPMX": 1200.0,
+                      "RMIN": 200.0,
+                      "RMAX": 1500.0,
+                      "KTMP": -5.0,
+                      "GMIN": 90,
+                      "GMAX": 365
+                  }
+                  ```
+
+                  ### Example Response:
+                  ```
+                  {
+                      "EcoPortCode": 123,
+                      "ScientificName": "Rosa",
+                      "AUTH": "L.",
+                      "FAMNAME": "Rosaceae",
+                      "TOPMN": 10.0,
+                      "TOPMX": 25.0,
+                      "TMIN": 5.0,
+                      "TMAX": 35.0,
+                      "ROPMN": 300.0,
+                      "ROPMX": 1200.0,
+                      "RMIN": 200.0,
+                      "RMAX": 1500.0,
+                      "KTMP": -5.0,
+                      "GMIN": 90,
+                      "GMAX": 365
+                  }
+                  ```
+
+                  ### Raises:
+                  - `HTTPException`: If the plant is not found (404).
+                  """
         query = select(Plant).where(Plant.ScientificName.ilike(updated_plant.ScientificName))
         result = await session.execute(query)
         plant = result.scalars().first()
@@ -157,9 +314,36 @@ def get_plant_router() -> APIRouter:
         """
         Create a new plant entry in the database.
 
-        :param new_plant: The details of the plant to create.
-        :param session: Database session dependency.
-        :return: The created Plant object.
+        This endpoint allows for the creation of a new plant record.
+        If a plant with the same scientific name already exists, a 400 error is returned.
+
+        ### Parameters:
+        - **new_plant** (PlantModel): The details of the plant to create.
+
+        ### Responses:
+        - **201 Created**: The created plant object.
+        - **400 Bad Request**: If a plant with the same scientific name already exists.
+
+        ### Example Request:
+        ```
+        POST /
+        {
+            "EcoPortCode": 123,
+            "ScientificName": "Rosa",
+            ...
+        }
+        ```
+
+        ### Example Response:
+        ```
+        {
+            "EcoPortCode": 123,
+            "ScientificName": "Rosa",
+            "TOPMN": 10.0,
+            "TOPMX": 25.0,
+            ...
+        }
+        ```
         """
         # Check if plant with same ScientificName already exists
         query = select(Plant).where(Plant.ScientificName.ilike(new_plant.ScientificName))
@@ -179,11 +363,25 @@ def get_plant_router() -> APIRouter:
     @router.delete("/{eco_port_code}")
     async def delete_plant(eco_port_code: int, session: AsyncSession = Depends(get_async_session)):
         """
-        Delete a plant by its EcoPortCode from the database.
+        Delete a plant by its EcoPortCode.
 
-        :param eco_port_code: The unique EcoPortCode of the plant to delete.
-        :param session: Database session dependency.
-        :return: A success message after deletion.
+        This endpoint deletes a plant based on its unique EcoPortCode.
+        If no plant is found with the provided EcoPortCode, a 404 error is returned.
+
+        ### Parameters:
+        - **eco_port_code** (int): The unique EcoPortCode of the plant to delete.
+
+        ### Responses:
+        - **204 No Content**: Successful deletion of the plant.
+        - **404 Not Found**: If no matching plant is found.
+
+        ### Example Request:
+        ```
+        DELETE /123
+        ```
+
+        ### Example Response:
+        - 204 No Content
         """
         # Find the plant by EcoPortCode
         query = select(Plant).where(Plant.EcoPortCode == eco_port_code)
