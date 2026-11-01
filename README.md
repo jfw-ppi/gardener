@@ -1,3 +1,15 @@
+> **Hinweis (ergänzt 2026):** Dieser Branch `sose-2024` zeigt den **Abgabestand vom 06.09.2024** des Projekts im Modul
+> *Web- und Cloud-Computing* (Sommersemester 2024, TH Lübeck). Der Stand wurde im Modul bewertet; der Code ist unverändert.
+>
+> - **Basis:** Das Projekt baut auf der Kursvorlage (Streamlit-/Kubernetes-Basecamp) von Prof. Dr. Nane Kratzke, TH Lübeck, auf.
+>   Der erste Commit enthält daraus nur Devcontainer-Konfiguration und GitLab-CI-Pipeline im Stand vom 12.04.2024. Das ist nicht
+>   meine Arbeit. Alle Commits ab dem 15.04.2024 sind meine.
+> - **Historie:** Die Commits tragen ihre Original-Autor- und Commit-Daten. Die vollständige datierte Original-Historie inklusive
+>   der Vorlage liegt in einem privaten Repository und kann auf Anfrage gezeigt werden.
+> - **Damaliger Betrieb:** Kubernetes-Cluster der TH Lübeck (GitLab-CI-Pipeline, siehe `.gitlab-ci.yml` und `deploy/`).
+>   Die unten genannten `*.edu.k8s.th-luebeck.dev`-URLs gibt es nicht mehr.
+> - **Weiterentwicklung:** `master` = Stand 2025 mit Fixes, `RAG_dbt_milvus` = RAG-Ausbau (2025 ergänzt).
+
 # Gardener App Documentation
 
 ## Inhaltsverzeichnis
