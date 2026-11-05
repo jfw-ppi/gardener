@@ -1,3 +1,16 @@
+> **Hinweis (ergänzt 2026):** Dieser Branch `master` ist der **Stand 2025** (Mai 2025), nicht der Abgabestand.
+> Der im Modul *Web- und Cloud-Computing* (SoSe 2024, TH Lübeck) bewertete **Abgabestand vom 06.09.2024** liegt
+> unverändert mit datierter Historie im Branch [`sose-2024`](../../tree/sose-2024).
+>
+> Änderungen gegenüber dem Abgabestand (2025):
+> - LLM-Anbindung über eine OpenAI-kompatible API (`ChatOpenAI`, Modell `llama-3.3-70b` auf dem TH-Modellendpunkt)
+>   statt `HuggingFaceEndpoint` mit Ausgabe-Bereinigung
+> - Wetterdaten: 14-Tage-Vorhersage statt 30-Tage-Archiv (Open-Meteo)
+> - Backend-Port per Umgebungsvariable, Docker Compose für den lokalen Start, README bereinigt
+>
+> Der RAG-Ausbau (dbt, Feast, Milvus) wurde 2025 ergänzt und liegt im Branch `RAG_dbt_milvus`.
+> Die TH-Modellendpunkte von 2024/2025 bzw. die dort genutzten Modelle gibt es inzwischen nicht mehr.
+
 # Gardener App Documentation
 
 ## Inhaltsverzeichnis
